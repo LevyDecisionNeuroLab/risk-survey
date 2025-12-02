@@ -26,8 +26,6 @@ app.get('/config.json', (req, res) => {
 app.get('/:urlPath', async (req, res) => {
     const requestedPath = req.params.urlPath;
     
-
-    
     try {
         // Check if this path exists in settings collection
         const settingsCollection = db.collection('settings');
@@ -544,7 +542,6 @@ async function serveAttentionCheckCsv(res) {
                 result.user_answer || '',
                 result.is_correct || '',
                 result.response_time || '',
-                // Handle timestamp properly - check if it's a Date object or string
                 result.timestamp ? (typeof result.timestamp === 'object' && result.timestamp.toISOString ? result.timestamp.toISOString() : result.timestamp) : '',
                 result.session_id || ''
             ].map(field => {
@@ -700,7 +697,7 @@ app.post('/save-attention', async (req, res) => {
     }
 });
 
-// Endpoint to download attention check data as CSV
+// Endpoint to download all trial data as JSON
 app.get('/download', async (req, res) => {
     try {
         const trialsCollection = db.collection('result');
@@ -711,48 +708,6 @@ app.get('/download', async (req, res) => {
     } catch (error) {
         console.error('Error fetching data:', error);
         res.status(500).json({ error: error.message });
-    }
-});
-
-        
-        if (results.length === 0) {
-            return res.status(404).send('No attention check data found for this participant.');
-        }
-        
-        // Create CSV header
-        const header = "participant_id,attention_check_number,question_type,question_prompt,correct_answer,user_answer,is_correct,response_time,timestamp,session_id";
-        
-        const csvRows = results.map(result => {
-            return [
-                result.participant_id || '',
-                result.attention_check_number || '',
-                result.question_type || '',
-                result.question_prompt || '',
-                result.correct_answer || '',
-                result.user_answer || '',
-                result.is_correct || '',
-                result.response_time || '',
-                result.timestamp ? result.timestamp.toISOString() : '',
-                result.session_id || ''
-            ].map(field => {
-                // Escape fields that contain commas or quotes
-                if (typeof field === 'string' && (field.includes(',') || field.includes('"'))) {
-                    return `"${field.replace(/"/g, '""')}"`;
-                }
-                return field;
-            }).join(',');
-        });
-        
-        const csvContent = [header, ...csvRows].join('\n');
-        
-        // Set headers for CSV download
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="attention_checks_${participantId}_${new Date().toISOString().split('T')[0]}.csv"`);
-        res.send(csvContent);
-        
-    } catch (error) {
-        console.error('Error generating attention check CSV:', error);
-        res.status(500).send('Error generating attention check CSV file');
     }
 });
 
@@ -774,4 +729,4 @@ connectToDb().then(() => {
 }).catch(err => {
     console.error('Failed to connect to the database', err);
     process.exit(1);
-}); 
+});
