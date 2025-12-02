@@ -279,20 +279,24 @@ Object.assign(RiskSurveyExperiment.prototype, {
     },
 
     selectChoice(choice) {
-        const time = (Date.now() - this.trialStartTime) / 1000;
-        this.barChoiceTime = time; // Record when choice was made
+    const time = (Date.now() - this.trialStartTime) / 1000;
+    this.barChoiceTime = time; // Record when choice was made
 
-        this.currentChoice = choice;
-        document.querySelectorAll('.selectable-bar').forEach(bar => {
-            bar.classList.remove('selected-bar');
-        });
-        const selectedElement = document.getElementById(choice === 'risk' ? 'risk-bar' : 'safe-bar');
-        if (selectedElement) {
-            selectedElement.classList.add('selected-bar');
-        }
-        
-        this.checkTrialComplete();
-    },
+    this.currentChoice = choice;
+    document.querySelectorAll('.selectable-bar').forEach(bar => {
+        bar.classList.remove('selected-bar');
+    });
+    const selectedElement = document.getElementById(choice === 'risk' ? 'risk-bar' : 'safe-bar');
+    if (selectedElement) {
+        selectedElement.classList.add('selected-bar');
+    }
+    
+    // Auto-advance after choice (no confidence question)
+    setTimeout(() => {
+        this.advanceTrial();
+    }, 300);
+},
+
 
     checkTrialComplete() {
         const nextButton = document.getElementById('next-button');
