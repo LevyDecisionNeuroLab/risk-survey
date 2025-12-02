@@ -228,8 +228,8 @@ Object.assign(RiskSurveyExperiment.prototype, {
             </div>
             
     <div class="navigation">
-                <button class="next-button" id="next-button" onclick="experiment.advanceTrial()" disabled>Next</button>
-            </div>`;
+    <button class="next-button" id="next-button" onclick="experiment.advanceTrial()" disabled>Next</button>
+</div>`;
     },
 
     getSizeClass(sizeCondition, optionType) {
@@ -299,14 +299,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
 
 
 
-    checkTrialComplete() {
-        const nextButton = document.getElementById('next-button');
-        if (nextButton && this.currentChoice !== null) {
-            nextButton.disabled = false;
-        } else if (nextButton) {
-            nextButton.disabled = true;
-        }
-    },
+checkTrialComplete() {
+    const nextButton = document.getElementById('next-button');
+    if (nextButton && this.currentChoice !== null) {
+        nextButton.disabled = false;
+    } else if (nextButton) {
+        nextButton.disabled = true;
+    }
+},
+
 
     advanceTrial() {
         this.finishTrial();
