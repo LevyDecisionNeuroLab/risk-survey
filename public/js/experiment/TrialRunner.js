@@ -298,6 +298,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
 },
 
 
+
     checkTrialComplete() {
         const nextButton = document.getElementById('next-button');
         if (nextButton && this.currentChoice !== null) {
