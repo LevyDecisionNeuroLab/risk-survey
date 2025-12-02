@@ -131,7 +131,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
             });
 
             // Save attention check data
-            const attentionResponse = await fetch('/save-attention', {
+            const attentionResponse = await fetch('https://risk-survey.onrender.com/save-attention', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
