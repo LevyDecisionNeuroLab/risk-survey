@@ -701,7 +701,7 @@ app.post('/save-attention', async (req, res) => {
 });
 
 // Endpoint to download attention check data as CSV
-app.get('/download-attention/:participantId', async (req, res) => {
+app.get('/download', async (req, res) => {
     const { participantId } = req.params;
     
     try {
