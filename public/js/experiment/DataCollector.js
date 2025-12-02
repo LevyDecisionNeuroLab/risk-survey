@@ -121,7 +121,8 @@ Object.assign(RiskSurveyExperiment.prototype, {
             console.log('Sample data row:', this.csvData[0]);
 
             // Save main trial data
-            const trialResponse = await fetch('/save', {
+            const trialResponse = await fetch('https://risk-survey.onrender.com/save', {
+
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
