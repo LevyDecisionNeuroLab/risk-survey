@@ -225,10 +225,11 @@ Object.assign(RiskSurveyExperiment.prototype, {
             <div class="bars-area">
                 <div class="option-container">${leftOption}</div>
                 <div class="option-container">${rightOption}</div>
-                        </div>`;
+               </div>`;
     },
 
     getSizeClass(sizeCondition, optionType) {
+
 
         switch (sizeCondition) {
             case 'both-large': return 'size-large';
