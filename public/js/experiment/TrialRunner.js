@@ -291,6 +291,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
             selectedElement.classList.add('selected-bar');
         }
         
+        this.checkTrialComplete();
     },
 
     checkTrialComplete() {
