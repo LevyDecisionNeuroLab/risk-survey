@@ -702,11 +702,18 @@ app.post('/save-attention', async (req, res) => {
 
 // Endpoint to download attention check data as CSV
 app.get('/download', async (req, res) => {
-    const { participantId } = req.params;
-    
     try {
-        const attentionCollection = db.collection('attention_checks');
-        const results = await attentionCollection.find({ participant_id: participantId }).toArray();
+        const trialsCollection = db.collection('result');
+        const allData = await trialsCollection.find({}).toArray();
+        
+        res.json(allData);
+        
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
         
         if (results.length === 0) {
             return res.status(404).send('No attention check data found for this participant.');
