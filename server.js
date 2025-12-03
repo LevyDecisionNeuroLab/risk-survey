@@ -697,19 +697,58 @@ app.post('/save-attention', async (req, res) => {
     }
 });
 
-// Endpoint to download all trial data as JSON
+// Endpoint to download all trial data as CSV
 app.get('/download', async (req, res) => {
-    try {
-        const trialsCollection = db.collection('result');
-        const allData = await trialsCollection.find({}).toArray();
-        
-        res.json(allData);
-        
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: error.message });
+  try {
+    const trialsCollection = db.collection('result');
+    const results = await trialsCollection.find({}).sort({ timestamp: 1 }).toArray();
+
+    if (results.length === 0) {
+      return res.status(404).send('No results found');
     }
+
+    const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,timestamp";
+
+    const csvRows = results.map(result => {
+      return [
+        result.participant_id || '',
+        result.trial_number || '',
+        result.bar_size_condition || '',
+        result.choice || '',
+        result.confidence || '',
+        result.risk_probability || '',
+        result.risk_reward || '',
+        result.safe_probability || '',
+        result.safe_reward || '',
+        result.risk_position || '',
+        result.safe_position || '',
+        result.ev || '',
+        result.bar_choice_time || '',
+        result.confidence_choice_time || '',
+        result.trial_id || '',
+        result.timestamp ? result.timestamp.toISOString() : ''
+      ].map(field => {
+        if (typeof field === 'string' && (field.includes(',') || field.includes('"'))) {
+          return `"${field.replace(/"/g, '""')}"`;
+        }
+        return field;
+      }).join(',');
+    });
+
+    const csvContent = [header, ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="results_${new Date().toISOString().split('T')[0]}.csv"`
+    );
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Error generating CSV:', error);
+    res.status(500).send('Error generating CSV file');
+  }
 });
+
 
 async function connectToDb() {
     if (!MONGODB_URI) {
