@@ -1,7 +1,6 @@
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const express = require('express');
-const cors = require('cors');  // NEW - enables cross-origin requests
 const fs = require('fs');
 const path = require('path');
 
@@ -14,7 +13,6 @@ let db;
 // ===========================================
 // MIDDLEWARE - Must come first
 // ===========================================
-app.use(cors());  // NEW - Enable CORS for all origins
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
