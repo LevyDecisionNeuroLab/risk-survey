@@ -66,8 +66,12 @@ body {
     padding: var(--spacing-sm);
     overflow-y: auto;
     box-sizing: border-box;
-    display: block;
+    display: flex;           /* Change from block to flex */
+    flex-direction: column;  /* Add this */
+    justify-content: center; /* Add this - centers vertically */
+    align-items: center;     /* Add this - centers horizontally */
 }
+
 
 /* Attention check container for centered layout */
 .main-container.attention-check-page {
@@ -98,9 +102,11 @@ body {
     justify-content: center;
     align-items: flex-end;
     gap: 144px;
-    margin: var(--spacing-lg) 0;
+    margin: var(--spacing-lg) auto;  /* Changed from 0 to auto */
     min-height: 450px;
+    width: 100%;                      /* Add this */
 }
+
 
 /* Option container */
 .option-container {
@@ -429,8 +435,10 @@ body {
     gap: 3.5rem;
     height: auto;
     min-height: 450px;
-    margin: 15px 0;
+    margin: 15px auto;  /* Changed from 15px 0 */
+    width: 100%;        /* Add this */
 }
+
 
 /* Hide jsPsych instructions previous button when not wanted */
 .no-prev-btn .jspsych-btn:first-child {
@@ -474,11 +482,13 @@ body {
 
 /* Vertically center all content on the screen */
 #jspsych-display-element {
-    /* min-height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: center; */
+    justify-content: center;
+    align-items: center;  /* Add this for horizontal center */
 }
+
 
 .centered-text {
     font-size: 18px;
