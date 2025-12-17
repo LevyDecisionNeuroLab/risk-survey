@@ -6,8 +6,8 @@
         "trialDuration": 6000,
         "barSizes": {
             "large": {
-                "width": 150,
-                "height": 450
+                "width": 180,
+                "height": 540
             },
             "small": {
                 "width": 75,
