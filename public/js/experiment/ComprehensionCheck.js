@@ -39,57 +39,186 @@ Object.assign(RiskSurveyExperiment.prototype, {
         const question = this.comprehensionQuestions[this.comprehensionState.currentQuestion];
         
         document.body.innerHTML = `
-            <div style="min-height: 100vh; padding: 3rem 2rem; max-width: 1200px; margin: 0 auto;">
-                <div style="text-align: center; max-width: 800px; margin: 0 auto;">
-                    <h1 style="font-size: 2rem; font-weight: 400; color: var(--text-primary); margin-bottom: 1rem;">Task Comprehension Check</h1>
-                    <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 3rem;">
-                        Question ${questionNum} of 3: Please answer the following question about the chart below.
-                    </p>
+            <style>
+                .comp-page {
+                    height: 100vh;
+                    padding: 1.5rem 2rem;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+                .comp-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    max-width: 900px;
+                    margin: 0 auto;
+                    width: 100%;
+                }
+                .comp-header {
+                    text-align: center;
+                    margin-bottom: 1rem;
+                }
+                .comp-header h1 {
+                    font-size: 1.6rem;
+                    font-weight: 400;
+                    color: var(--text-primary);
+                    margin: 0 0 0.5rem 0;
+                }
+                .comp-header p {
+                    font-size: 1rem;
+                    color: var(--text-secondary);
+                    margin: 0;
+                }
+                .comp-chart {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 3rem;
+                    margin: 1.5rem 0;
+                }
+                .comp-option {
+                    text-align: center;
+                }
+                .comp-label {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 0.25rem 0;
+                }
+                .comp-risk-bar {
+                    width: 100px;
+                    height: 180px;
+                    border: 2px solid #333;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .comp-risk-bar .red {
+                    height: 75%;
+                    background: #e74c3c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .comp-risk-bar .blue {
+                    height: 25%;
+                    background: #3498db;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .comp-safe-bar {
+                    width: 100px;
+                    height: 180px;
+                    background: #2c3e50;
+                    border: 2px solid #333;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .comp-question-box {
+                    padding: 1.25rem 1.5rem;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border-left: 4px solid #3498db;
+                    text-align: center;
+                }
+                .comp-question-box p {
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin: 0 0 1rem 0;
+                }
+                .comp-answer-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 1rem;
+                }
+                .comp-answer-row label {
+                    font-size: 1rem;
+                    font-weight: 500;
+                }
+                .comp-answer-row input {
+                    padding: 10px 14px;
+                    font-size: 16px;
+                    border: 2px solid #e5e5e5;
+                    border-radius: 6px;
+                    width: 140px;
+                    text-align: center;
+                    font-weight: 600;
+                }
+                .comp-error {
+                    color: #e74c3c;
+                    font-weight: 500;
+                    margin-top: 0.75rem;
+                    visibility: hidden;
+                    font-size: 0.9rem;
+                }
+                .comp-submit {
+                    text-align: center;
+                    margin-top: 1.25rem;
+                }
+            </style>
+            
+            <div class="comp-page">
+                <div class="comp-content">
+                    <div class="comp-header">
+                        <h1>Task Comprehension Check</h1>
+                        <p>Question ${questionNum} of 3: Please answer the following question about the chart below.</p>
+                    </div>
                     
                     <!-- Chart Display -->
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 4rem; margin: 3rem 0;">
+                    <div class="comp-chart">
                         <!-- Left Option (Risky) -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: 24px; margin-bottom: 0.5rem; font-weight: bold;">200</div>
-                            <div class="risk-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; border: 2px solid #333; position: relative; background: #fff;">
-                                <div class="risk-bar-red" style="height: 75%; background: #e74c3c; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">75</div>
-                                <div class="risk-bar-blue" style="height: 25%; background: #3498db; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">25</div>
+                        <div class="comp-option">
+                            <div class="comp-label">200</div>
+                            <div class="comp-risk-bar">
+                                <div class="red">75</div>
+                                <div class="blue">25</div>
                             </div>
-                            <div class="option-label" style="font-size: 24px; margin-top: 0.5rem; font-weight: bold;">0</div>
+                            <div class="comp-label">0</div>
                         </div>
                         
                         <!-- Right Option (Safe) -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: 24px; margin-bottom: 0.5rem; font-weight: bold;">150</div>
-                            <div class="safe-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; background: #2c3e50; border: 2px solid #333; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">100</div>
-                            <div class="option-label" style="visibility: hidden; font-size: 24px; margin-top: 0.5rem;">0</div>
+                        <div class="comp-option">
+                            <div class="comp-label">150</div>
+                            <div class="comp-safe-bar">100</div>
+                            <div class="comp-label" style="visibility: hidden;">0</div>
                         </div>
                     </div>
                     
                     <!-- Question -->
-                    <div style="margin: 3rem 0; padding: 2rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
-                        <p style="font-size: 1.3rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1.5rem;">
-                            ${question.prompt}
-                        </p>
-                        
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
-                            <label style="font-size: 1.1rem; font-weight: 500;">Your answer:</label>
-                            <input type="number" id="comprehension-answer" placeholder="Enter number..." 
-                                style="padding: 12px 16px; font-size: 18px; border: 2px solid #e5e5e5; border-radius: 6px; width: 180px; text-align: center; font-weight: 600;"
-                                min="0" max="1000">
+                    <div class="comp-question-box">
+                        <p>${question.prompt}</p>
+                        <div class="comp-answer-row">
+                            <label>Your answer:</label>
+                            <input type="number" id="comprehension-answer" placeholder="Enter number..." min="0" max="1000">
                         </div>
-                        
-                        <div id="error-message" style="color: #e74c3c; font-weight: 500; margin-top: 1rem; visibility: hidden;">
-                            Please enter a valid number.
-                        </div>
+                        <div id="error-message" class="comp-error">Please enter a valid number.</div>
                     </div>
                     
-                    <button onclick="experiment.submitComprehensionAnswer()" class="next-button" id="submit-answer">
-                        Submit Answer
-                    </button>
+                    <div class="comp-submit">
+                        <button id="submit-btn" class="next-button">Submit Answer</button>
+                    </div>
                 </div>
             </div>
         `;
+        
+        // Add event listeners
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            this.submitComprehensionAnswer();
+        });
         
         // Focus on input and allow Enter to submit
         const input = document.getElementById('comprehension-answer');
@@ -145,92 +274,315 @@ Object.assign(RiskSurveyExperiment.prototype, {
         const question = this.comprehensionQuestions[this.comprehensionState.currentQuestion];
         
         document.body.innerHTML = `
-            <div style="min-height: 100vh; padding: 3rem 2rem; max-width: 1200px; margin: 0 auto;">
-                <div style="text-align: center; max-width: 800px; margin: 0 auto;">
-                    <div style="margin-bottom: 2rem; padding: 1.5rem; background: #d4edda; border: 2px solid #c3e6c3; border-radius: 8px;">
-                        <h2 style="color: #155724; margin: 0; font-size: 1.5rem;">✓ Correct!</h2>
+            <style>
+                .feedback-page {
+                    height: 100vh;
+                    padding: 1.5rem 2rem;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+                .feedback-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    width: 100%;
+                    text-align: center;
+                }
+                .feedback-banner {
+                    padding: 1rem 1.5rem;
+                    background: #d4edda;
+                    border: 2px solid #c3e6c3;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                }
+                .feedback-banner h2 {
+                    color: #155724;
+                    margin: 0;
+                    font-size: 1.4rem;
+                }
+                .feedback-text {
+                    font-size: 1.1rem;
+                    color: var(--text-primary);
+                    margin-bottom: 1.5rem;
+                }
+                .feedback-chart {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 3rem;
+                    padding: 1.5rem;
+                    background: #f0f8f0;
+                    border-radius: 8px;
+                    border: 2px solid #c3e6c3;
+                    margin-bottom: 1.5rem;
+                }
+                .feedback-option {
+                    text-align: center;
+                }
+                .feedback-label {
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 0.25rem 0;
+                }
+                .feedback-label.highlight {
+                    background: #ffeaa7;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                }
+                .feedback-risk-bar {
+                    width: 80px;
+                    height: 140px;
+                    border: 2px solid #333;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .feedback-risk-bar .red {
+                    height: 75%;
+                    background: #e74c3c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .feedback-risk-bar .blue {
+                    height: 25%;
+                    background: #3498db;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .feedback-safe-bar {
+                    width: 80px;
+                    height: 140px;
+                    background: #2c3e50;
+                    border: 2px solid #333;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+            </style>
+            
+            <div class="feedback-page">
+                <div class="feedback-content">
+                    <div class="feedback-banner">
+                        <h2>✓ Correct!</h2>
                     </div>
                     
-                    <p style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 2rem;">
-                        Yes, the correct response is ${question.correctAnswer}!
-                    </p>
+                    <p class="feedback-text">Yes, the correct response is ${question.correctAnswer}!</p>
                     
                     <!-- Highlighted Chart -->
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 4rem; margin: 3rem 0; padding: 2rem; background: #f0f8f0; border-radius: 8px; border: 2px solid #c3e6c3;">
+                    <div class="feedback-chart">
                         <!-- Left Option -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-bottom: 0.5rem; font-weight: 600; ${this.shouldHighlightLeft() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">200</div>
-                            <div class="risk-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; border: 2px solid #333; position: relative; background: #fff;">
-                                <div class="risk-bar-red" style="height: 75%; background: #e74c3c; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">75</div>
-                                <div class="risk-bar-blue" style="height: 25%; background: #3498db; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">25</div>
+                        <div class="feedback-option">
+                            <div class="feedback-label ${this.shouldHighlightLeft() ? 'highlight' : ''}">200</div>
+                            <div class="feedback-risk-bar">
+                                <div class="red">75</div>
+                                <div class="blue">25</div>
                             </div>
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-top: 0.5rem; font-weight: 600; ${this.shouldHighlightLeftBottom() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">0</div>
+                            <div class="feedback-label ${this.shouldHighlightLeftBottom() ? 'highlight' : ''}">0</div>
                         </div>
                         
                         <!-- Right Option -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-bottom: 0.5rem; font-weight: 600; ${this.shouldHighlightRight() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">150</div>
-                            <div class="safe-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; background: #2c3e50; border: 2px solid #333; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">100</div>
-                            <div class="option-label" style="visibility: hidden; font-size: ${this.experimentConfig.fontSizes.small}px; margin-top: 0.5rem;">0</div>
+                        <div class="feedback-option">
+                            <div class="feedback-label ${this.shouldHighlightRight() ? 'highlight' : ''}">150</div>
+                            <div class="feedback-safe-bar">100</div>
+                            <div class="feedback-label" style="visibility: hidden;">0</div>
                         </div>
                     </div>
                     
-                    <button onclick="experiment.nextComprehensionQuestion()" class="next-button">
-                        Continue
-                    </button>
+                    <button id="continue-btn" class="next-button">Continue</button>
                 </div>
             </div>
         `;
+        
+        document.getElementById('continue-btn').addEventListener('click', () => {
+            this.nextComprehensionQuestion();
+        });
     },
     
     showIncorrectFeedback() {
         const question = this.comprehensionQuestions[this.comprehensionState.currentQuestion];
         
         document.body.innerHTML = `
-            <div style="min-height: 100vh; padding: 3rem 2rem; max-width: 1200px; margin: 0 auto;">
-                <div style="text-align: center; max-width: 800px; margin: 0 auto;">
-                    <div style="margin-bottom: 2rem; padding: 1.5rem; background: #f8d7da; border: 2px solid #f5c6cb; border-radius: 8px;">
-                        <h2 style="color: #721c24; margin: 0; font-size: 1.5rem;">Incorrect</h2>
+            <style>
+                .feedback-page {
+                    height: 100vh;
+                    padding: 1.5rem 2rem;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+                .feedback-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    width: 100%;
+                    text-align: center;
+                }
+                .feedback-banner.incorrect {
+                    padding: 1rem 1.5rem;
+                    background: #f8d7da;
+                    border: 2px solid #f5c6cb;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                }
+                .feedback-banner.incorrect h2 {
+                    color: #721c24;
+                    margin: 0;
+                    font-size: 1.4rem;
+                }
+                .feedback-text {
+                    font-size: 1.05rem;
+                    color: var(--text-primary);
+                    margin-bottom: 1rem;
+                    line-height: 1.5;
+                }
+                .feedback-chart.warning {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 3rem;
+                    padding: 1.25rem;
+                    background: #fff3cd;
+                    border-radius: 8px;
+                    border: 2px solid #ffeaa7;
+                    margin-bottom: 1rem;
+                }
+                .feedback-option {
+                    text-align: center;
+                }
+                .feedback-label {
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 0.25rem 0;
+                }
+                .feedback-label.highlight {
+                    background: #ffeaa7;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                }
+                .feedback-risk-bar {
+                    width: 80px;
+                    height: 140px;
+                    border: 2px solid #333;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .feedback-risk-bar .red {
+                    height: 75%;
+                    background: #e74c3c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .feedback-risk-bar .blue {
+                    height: 25%;
+                    background: #3498db;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .feedback-safe-bar {
+                    width: 80px;
+                    height: 140px;
+                    background: #2c3e50;
+                    border: 2px solid #333;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    color: white;
+                    font-weight: 600;
+                }
+                .understanding-box {
+                    padding: 1rem 1.5rem;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                }
+                .understanding-box p {
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    margin: 0 0 1rem 0;
+                }
+                .understanding-buttons {
+                    display: flex;
+                    gap: 1.5rem;
+                    justify-content: center;
+                }
+                .understanding-buttons button {
+                    padding: 0.6rem 2rem;
+                }
+            </style>
+            
+            <div class="feedback-page">
+                <div class="feedback-content">
+                    <div class="feedback-banner incorrect">
+                        <h2>Incorrect</h2>
                     </div>
                     
-                    <p style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 2rem;">
-                        ${question.explanation}
-                    </p>
+                    <p class="feedback-text">${question.explanation}</p>
                     
                     <!-- Chart with Explanation -->
-                    <div style="display: flex; justify-content: center; align-items: center; gap: 4rem; margin: 3rem 0; padding: 2rem; background: #fff3cd; border-radius: 8px; border: 2px solid #ffeaa7;">
+                    <div class="feedback-chart warning">
                         <!-- Left Option -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-bottom: 0.5rem; font-weight: 600; ${this.shouldHighlightLeft() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">200</div>
-                            <div class="risk-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; border: 2px solid #333; position: relative; background: #fff;">
-                                <div class="risk-bar-red" style="height: 75%; background: #e74c3c; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">75</div>
-                                <div class="risk-bar-blue" style="height: 25%; background: #3498db; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">25</div>
+                        <div class="feedback-option">
+                            <div class="feedback-label ${this.shouldHighlightLeft() ? 'highlight' : ''}">200</div>
+                            <div class="feedback-risk-bar">
+                                <div class="red">75</div>
+                                <div class="blue">25</div>
                             </div>
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-top: 0.5rem; font-weight: 600; ${this.shouldHighlightLeftBottom() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">0</div>
+                            <div class="feedback-label ${this.shouldHighlightLeftBottom() ? 'highlight' : ''}">0</div>
                         </div>
                         
                         <!-- Right Option -->
-                        <div class="option" style="text-align: center;">
-                            <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px; margin-bottom: 0.5rem; font-weight: 600; ${this.shouldHighlightRight() ? 'background: #ffeaa7; padding: 4px 8px; border-radius: 4px;' : ''}">150</div>
-                            <div class="safe-bar" style="width: ${this.experimentConfig.barSizes.large.width}px; height: ${this.experimentConfig.barSizes.large.height}px; background: #2c3e50; border: 2px solid #333; display: flex; align-items: center; justify-content: center; font-size: ${this.experimentConfig.fontSizes.large}px; color: white; font-weight: 600;">100</div>
-                            <div class="option-label" style="visibility: hidden; font-size: ${this.experimentConfig.fontSizes.small}px; margin-top: 0.5rem;">0</div>
+                        <div class="feedback-option">
+                            <div class="feedback-label ${this.shouldHighlightRight() ? 'highlight' : ''}">150</div>
+                            <div class="feedback-safe-bar">100</div>
+                            <div class="feedback-label" style="visibility: hidden;">0</div>
                         </div>
                     </div>
                     
-                    <div style="margin: 2rem 0; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
-                        <p style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">Do you understand the explanation?</p>
-                        <div style="display: flex; gap: 2rem; justify-content: center;">
-                            <button onclick="experiment.handleUnderstandingResponse(true)" class="next-button" style="background: #28a745;">
-                                Yes
-                            </button>
-                            <button onclick="experiment.handleUnderstandingResponse(false)" class="next-button" style="background: #dc3545;">
-                                No
-                            </button>
+                    <div class="understanding-box">
+                        <p>Do you understand the explanation?</p>
+                        <div class="understanding-buttons">
+                            <button id="yes-btn" class="next-button" style="background: #28a745;">Yes</button>
+                            <button id="no-btn" class="next-button" style="background: #dc3545;">No</button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        document.getElementById('yes-btn').addEventListener('click', () => {
+            this.handleUnderstandingResponse(true);
+        });
+        
+        document.getElementById('no-btn').addEventListener('click', () => {
+            this.handleUnderstandingResponse(false);
+        });
     },
     
     shouldHighlightLeft() {
@@ -277,15 +629,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
     
     showComprehensionFailure() {
         document.body.innerHTML = `
-            <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
-                <div style="text-align: center; max-width: 600px; padding: 3rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <h2 style="color: #dc3545; margin-bottom: 2rem; font-size: 2rem;">Study Complete</h2>
-                    <div style="margin: 2rem 0; padding: 2rem; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
-                        <p style="font-size: 1.2rem; color: #721c24; margin: 0;">
+            <div style="height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; box-sizing: border-box;">
+                <div style="text-align: center; max-width: 600px; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <h2 style="color: #dc3545; margin-bottom: 1.5rem; font-size: 1.8rem;">Study Complete</h2>
+                    <div style="margin: 1.5rem 0; padding: 1.5rem; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <p style="font-size: 1.1rem; color: #721c24; margin: 0;">
                             Thank you for your time. Unfortunately, you are not eligible to continue with this study at this time.
                         </p>
                     </div>
-                    <p style="font-size: 1rem; color: #666; margin-top: 2rem;">
+                    <p style="font-size: 1rem; color: #666; margin-top: 1.5rem;">
                         You may now close this window.
                     </p>
                 </div>
@@ -306,3 +658,49 @@ Object.assign(RiskSurveyExperiment.prototype, {
         // this.sendComprehensionData(this.comprehensionState);
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
