@@ -82,83 +82,142 @@ Object.assign(RiskSurveyExperiment.prototype, {
         this.showInstructions();
     },
 
-    showInstructions() {
+        showInstructions() {
         document.body.innerHTML = `
-            <div style="min-height: 100vh; padding: 3rem 2rem; max-width: 1200px; margin: 0 auto;">
-                <div class="instructions" style="text-align: left; max-width: 900px; margin: 0 auto;">
-                    <h1 style="font-size: 2.5rem; font-weight: 300; color: var(--text-primary); margin-bottom: 3rem; letter-spacing: -1px; text-align: center;">Instructions for the Decision-Making Task</h1>
+            <style>
+                .instructions-page {
+                    width: 100%;
+                    height: 100vh;
+                    display: none;
+                    flex-direction: column;
+                    padding: 2rem;
+                    background: var(--bg-primary);
+                    overflow: hidden;
+                }
+                
+                .instructions-page.active {
+                    display: flex;
+                }
+                
+                .instructions-content {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding-right: 1rem;
+                }
+                
+                .instructions-buttons {
+                    display: flex;
+                    gap: 1rem;
+                    justify-content: center;
+                    padding-top: 1rem;
+                    border-top: 1px solid #e5e5e5;
+                    margin-top: 1rem;
+                }
+                
+                .instructions-buttons button {
+                    padding: 0.75rem 1.5rem;
+                    font-size: 1rem;
+                }
+            </style>
+            
+            <!-- PAGE 1: Title & Monetary Choices -->
+            <div class="instructions-page active" id="instructions-page-1">
+                <div class="instructions-content">
+                    <h1 style="font-size: 2rem; font-weight: 300; color: var(--text-primary); margin: 0 0 1rem 0; letter-spacing: -1px; text-align: center;">Instructions for the Decision-Making Task</h1>
                     
-                    <p style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 2rem; line-height: 1.8; font-weight: 300;">
+                    <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 1.5rem; line-height: 1.6; font-weight: 300; text-align: center;">
                         In this study, you will be making decisions between different monetary choices. These choices represent hypothetical situations, but you should choose as if the decisions were real.
                     </p>
                     
-                    <div style="margin-bottom: 2rem;">
-                        <h2 style="font-size: 1.6rem; font-weight: 400; color: var(--text-primary); margin-bottom: 2rem;">
-                            1. <u>Understanding Monetary Choices</u>: On each screen, you will be presented with two options—one will be a lottery, and the other will be a guaranteed amount.
-                        </h2>
+                    <h2 style="font-size: 1.3rem; font-weight: 400; color: var(--text-primary); margin-bottom: 1rem; text-decoration: underline;">Understanding Monetary Choices</h2>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.6; font-weight: 300;">
+                            <strong>○ Option 1: A Lottery</strong>
+                        </p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.5; font-weight: 300;">
+                            A lottery has two possible outcomes. In the example below, the outcomes are 200 points or 0. The red and blue areas and the numbers within them represent the chance for obtaining these outcomes. There is a 75% chance of obtaining 200 points and a 25% chance of obtaining 0 points.
+                        </p>
                         
-                        <div style="margin: 1.5rem 0;">
-                            <p style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; line-height: 1.7; font-weight: 300;">
-                                <strong>○ Option 1</strong>: A lottery has two possible outcomes. In the example below, the outcomes are 200 points or 0. The red and blue areas and the numbers within them represent the chance for obtaining these outcomes. There is a 75% chance of obtaining 200 points and a 25% chance of obtaining 0 points.
-                            </p>
-                            
-                            <div style="text-align: center; margin: 2rem 0;">
-                                <div class="option" style="margin: 1rem auto; display: inline-block;">
-                                    <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px;">200</div>
-                                    <div class="risk-bar" style="width: ${this.experimentConfig.barSizes.small.width}px; height: ${this.experimentConfig.barSizes.small.height}px; font-size: ${this.experimentConfig.fontSizes.small}px;">
-                                        <div class="risk-bar-red" style="height: 75%; font-size: ${this.experimentConfig.fontSizes.small}px;">75%</div>
-                                        <div class="risk-bar-blue" style="height: 25%; font-size: ${this.experimentConfig.fontSizes.small}px;">25%</div>
-                                    </div>
-                                    <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px;">0</div>
+                        <div style="text-align: center; margin: 1rem 0;">
+                            <div style="display: inline-block;">
+                                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">200</div>
+                                <div style="width: 80px; height: 140px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 75%; background: #dc2626; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">75%</div>
+                                    <div style="height: 25%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">25%</div>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin: 1.5rem 0;">
-                            <p style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; line-height: 1.7; font-weight: 300;">
-                                <strong>○ Option 2</strong>: A guaranteed outcome where you have a 100% chance (shown in the black bar) to win a specific number of points, such as 150 points seen in this example.
-                            </p>
-                            
-                            <div style="text-align: center; margin: 2rem 0;">
-                                <div class="option" style="margin: 1rem auto; display: inline-block;">
-                                    <div class="option-label" style="font-size: ${this.experimentConfig.fontSizes.small}px;">150</div>
-                                    <div class="safe-bar" style="width: ${this.experimentConfig.barSizes.small.width}px; height: ${this.experimentConfig.barSizes.small.height}px; font-size: ${this.experimentConfig.fontSizes.small}px;">
-                                        100%
-                                    </div>
-                                    <div class="option-label" style="visibility: hidden; font-size: ${this.experimentConfig.fontSizes.small}px;">0</div>
-                                </div>
+                                <div style="font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem; color: var(--text-secondary);">0</div>
                             </div>
                         </div>
                     </div>
                     
-                    <div style="margin: 2rem 0;">
-                        <h2 style="font-size: 1.6rem; font-weight: 400; color: var(--text-primary); margin-bottom: 2rem;">
-                            2. <u>Your Task</u>:
-                        </h2>
-                        <ol style="line-height: 1.8; font-size: 1.1rem; font-weight: 300; margin-left: 2rem;">
-                            <li style="margin-bottom: 1rem;"><strong>Choose</strong> your preferred option by clicking on it</li>
-                            <li style="margin-bottom: 1rem;"><strong>Click Next</strong> to continue to the next choice</li>
-                        </ol>
-                        <p style="font-size: 1.1rem; color: var(--text-secondary); margin-top: 2rem; font-style: italic; font-weight: 300;">
-                            Make decisions as if they were real. You'll start with practice trials.
+                    <div style="margin-bottom: 1rem;">
+                        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.6; font-weight: 300;">
+                            <strong>○ Option 2: A Guaranteed Outcome</strong>
                         </p>
-                    </div>
-                    
-                    <div style="margin: 2rem 0; padding: 2rem; border-left: 4px solid #ffeaa7;">
-                        <h2 style="margin-top: 0; color: var(--text-primary); font-size: 1.6rem; font-weight: 400;">⏱️ Important Timing Info</h2>
-                        <p style="margin-bottom: 0; color: var(--text-primary); line-height: 1.7; font-size: 1.1rem; font-weight: 300;">
-                            You have <strong>6 seconds</strong> to make each choice. After selecting, click Next.
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.5; font-weight: 300;">
+                            A guaranteed outcome where you have a 100% chance (shown in the black bar) to win a specific number of points, such as 150 points seen in this example.
                         </p>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 3rem;">
-                        <button class="next-button" onclick="experiment.startComprehensionCheck()">Continue</button>
+                        
+                        <div style="text-align: center; margin: 1rem 0;">
+                            <div style="display: inline-block;">
+                                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">150</div>
+                                <div style="width: 80px; height: 140px; background: #334155; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px;">100%</div>
+                                <div style="font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem; visibility: hidden;">0</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="instructions-buttons">
+                    <button class="next-button" onclick="experiment.showInstructionsPage(2)">Next</button>
+                </div>
             </div>
+            
+            <!-- PAGE 2: Your Task & Timing Info -->
+            <div class="instructions-page" id="instructions-page-2">
+                <div class="instructions-content">
+                    <h2 style="font-size: 1.3rem; font-weight: 400; color: var(--text-primary); margin: 0 0 1rem 0; text-decoration: underline;">Your Task</h2>
+                    
+                    <ol style="line-height: 1.6; font-size: 0.95rem; font-weight: 300; margin: 0 0 1.5rem 2rem; padding: 0;">
+                        <li style="margin-bottom: 0.75rem;">Choose your preferred option by clicking on it</li>
+                        <li style="margin-bottom: 0.75rem;">Click Next to continue to the next choice</li>
+                    </ol>
+                    
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 1rem 0 1.5rem 0; font-style: italic; font-weight: 300;">
+                        Make decisions as if they were real. You'll start with practice trials.
+                    </p>
+                    
+                    <div style="margin: 1.5rem 0; padding: 1.5rem; border-left: 4px solid #ffeaa7; background: rgba(252, 212, 158, 0.2); border-radius: 4px;">
+                        <h3 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                            ⏱️ Important Timing Info
+                        </h3>
+                        <p style="margin: 0; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem; font-weight: 300;">
+                            You have <strong>6 seconds</strong> to make each choice. After selecting, click Next.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="instructions-buttons">
+                    <button class="next-button" onclick="experiment.showInstructionsPage(1)">Back</button>
+                    <button class="next-button" onclick="experiment.startComprehensionCheck()">Continue</button>
+                </div>
+            </div>
+            
+            <script>
+                // Add method to experiment object to handle page switching
+                if (!experiment.showInstructionsPage) {
+                    experiment.showInstructionsPage = function(pageNum) {
+                        document.querySelectorAll('.instructions-page').forEach(page => {
+                            page.classList.remove('active');
+                        });
+                        document.getElementById('instructions-page-' + pageNum).classList.add('active');
+                    };
+                }
+            </script>
         `;
     },
+
 
     startMainTrials() {
         document.body.innerHTML = `
