@@ -82,7 +82,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
         this.showInstructions();
     },
 
-        showInstructions() {
+    showInstructions() {
         document.body.innerHTML = `
             <style>
                 .instructions-page {
@@ -90,8 +90,9 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     height: 100vh;
                     display: none;
                     flex-direction: column;
-                    padding: 2rem;
+                    padding: 1.5rem 3rem;
                     background: var(--bg-primary);
+                    box-sizing: border-box;
                     overflow: hidden;
                 }
                 
@@ -101,8 +102,9 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 
                 .instructions-content {
                     flex: 1;
-                    overflow-y: auto;
-                    padding-right: 1rem;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
                 }
                 
                 .instructions-buttons {
@@ -110,60 +112,164 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     gap: 1rem;
                     justify-content: center;
                     padding-top: 1rem;
-                    border-top: 1px solid #e5e5e5;
-                    margin-top: 1rem;
+                    flex-shrink: 0;
                 }
                 
                 .instructions-buttons button {
-                    padding: 0.75rem 1.5rem;
+                    padding: 0.6rem 1.5rem;
                     font-size: 1rem;
+                }
+                
+                .options-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: stretch;
+                    gap: 0;
+                    margin-top: 1rem;
+                }
+                
+                .option-box {
+                    flex: 1;
+                    max-width: 400px;
+                    padding: 1.5rem 2rem;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .option-box.left {
+                    border-right: 2px solid #e5e5e5;
+                }
+                
+                .option-title {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin-bottom: 0.5rem;
+                }
+                
+                .option-description {
+                    font-size: 0.85rem;
+                    color: var(--text-secondary);
+                    line-height: 1.5;
+                    font-weight: 300;
+                    margin-bottom: 1rem;
+                    flex: 1;
+                }
+                
+                .bar-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-end;
+                }
+                
+                .bar-wrapper {
+                    text-align: center;
+                }
+                
+                .bar-label-top {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    margin-bottom: 0.25rem;
+                    color: var(--text-primary);
+                }
+                
+                .bar-label-bottom {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    margin-top: 0.25rem;
+                    color: var(--text-secondary);
+                }
+                
+                .lottery-bar {
+                    width: 70px;
+                    height: 120px;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-radius: 4px;
+                    overflow: hidden;
+                }
+                
+                .lottery-bar .red {
+                    height: 75%;
+                    background: #dc2626;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+                
+                .lottery-bar .blue {
+                    height: 25%;
+                    background: #2563eb;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+                
+                .safe-bar {
+                    width: 70px;
+                    height: 120px;
+                    background: #334155;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-radius: 4px;
                 }
             </style>
             
-            <!-- PAGE 1: Title & Monetary Choices -->
+            <!-- PAGE 1: Understanding Monetary Choices - Side by Side Layout -->
             <div class="instructions-page active" id="instructions-page-1">
                 <div class="instructions-content">
-                    <h1 style="font-size: 2rem; font-weight: 300; color: var(--text-primary); margin: 0 0 1rem 0; letter-spacing: -1px; text-align: center;">Instructions for the Decision-Making Task</h1>
+                    <h1 style="font-size: 1.8rem; font-weight: 300; color: var(--text-primary); margin: 0 0 0.5rem 0; letter-spacing: -1px; text-align: center;">Instructions for the Decision-Making Task</h1>
                     
-                    <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 1.5rem; line-height: 1.6; font-weight: 300; text-align: center;">
-                        In this study, you will be making decisions between different monetary choices. These choices represent hypothetical situations, but you should choose as if the decisions were real.
+                    <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; font-weight: 300; text-align: center;">
+                        In this study, you will be making decisions between different monetary choices.<br>These choices represent hypothetical situations, but you should choose as if the decisions were real.
                     </p>
                     
-                    <h2 style="font-size: 1.3rem; font-weight: 400; color: var(--text-primary); margin-bottom: 1rem; text-decoration: underline;">Understanding Monetary Choices</h2>
+                    <h2 style="font-size: 1.1rem; font-weight: 500; color: var(--text-primary); margin-bottom: 0.5rem; text-align: center; text-decoration: underline;">Understanding Monetary Choices</h2>
                     
-                    <div style="margin-bottom: 1.5rem;">
-                        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.6; font-weight: 300;">
-                            <strong>○ Option 1: A Lottery</strong>
-                        </p>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.5; font-weight: 300;">
-                            A lottery has two possible outcomes. In the example below, the outcomes are 200 points or 0. The red and blue areas and the numbers within them represent the chance for obtaining these outcomes. There is a 75% chance of obtaining 200 points and a 25% chance of obtaining 0 points.
-                        </p>
-                        
-                        <div style="text-align: center; margin: 1rem 0;">
-                            <div style="display: inline-block;">
-                                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">200</div>
-                                <div style="width: 80px; height: 140px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 75%; background: #dc2626; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">75%</div>
-                                    <div style="height: 25%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">25%</div>
+                    <!-- Side by Side Options -->
+                    <div class="options-container">
+                        <!-- Option 1: Lottery -->
+                        <div class="option-box left">
+                            <div class="option-title">Option 1: A Lottery</div>
+                            <div class="option-description">
+                                A lottery has two possible outcomes. In this example, the outcomes are 200 points or 0. The red and blue areas represent the chance for each outcome: 75% chance of winning 200 points and 25% chance of winning 0 points.
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-wrapper">
+                                    <div class="bar-label-top">200</div>
+                                    <div class="lottery-bar">
+                                        <div class="red">75%</div>
+                                        <div class="blue">25%</div>
+                                    </div>
+                                    <div class="bar-label-bottom">0</div>
                                 </div>
-                                <div style="font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem; color: var(--text-secondary);">0</div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.6; font-weight: 300;">
-                            <strong>○ Option 2: A Guaranteed Outcome</strong>
-                        </p>
-                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.5; font-weight: 300;">
-                            A guaranteed outcome where you have a 100% chance (shown in the black bar) to win a specific number of points, such as 150 points seen in this example.
-                        </p>
                         
-                        <div style="text-align: center; margin: 1rem 0;">
-                            <div style="display: inline-block;">
-                                <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.25rem;">150</div>
-                                <div style="width: 80px; height: 140px; background: #334155; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px;">100%</div>
-                                <div style="font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem; visibility: hidden;">0</div>
+                        <!-- Option 2: Guaranteed -->
+                        <div class="option-box">
+                            <div class="option-title">Option 2: A Guaranteed Outcome</div>
+                            <div class="option-description">
+                                A guaranteed outcome where you have a 100% chance (shown in the dark bar) to win a specific number of points. In this example, you would receive 150 points with certainty.
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-wrapper">
+                                    <div class="bar-label-top">150</div>
+                                    <div class="safe-bar">100%</div>
+                                    <div class="bar-label-bottom" style="visibility: hidden;">0</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -177,23 +283,31 @@ Object.assign(RiskSurveyExperiment.prototype, {
             <!-- PAGE 2: Your Task & Timing Info -->
             <div class="instructions-page" id="instructions-page-2">
                 <div class="instructions-content">
-                    <h2 style="font-size: 1.3rem; font-weight: 400; color: var(--text-primary); margin: 0 0 1rem 0; text-decoration: underline;">Your Task</h2>
-                    
-                    <ol style="line-height: 1.6; font-size: 0.95rem; font-weight: 300; margin: 0 0 1.5rem 2rem; padding: 0;">
-                        <li style="margin-bottom: 0.75rem;">Choose your preferred option by clicking on it</li>
-                        <li style="margin-bottom: 0.75rem;">Click Next to continue to the next choice</li>
-                    </ol>
-                    
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 1rem 0 1.5rem 0; font-style: italic; font-weight: 300;">
-                        Make decisions as if they were real. You'll start with practice trials.
-                    </p>
-                    
-                    <div style="margin: 1.5rem 0; padding: 1.5rem; border-left: 4px solid #ffeaa7; background: rgba(252, 212, 158, 0.2); border-radius: 4px;">
-                        <h3 style="margin: 0 0 0.75rem 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
-                            ⏱️ Important Timing Info
-                        </h3>
-                        <p style="margin: 0; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem; font-weight: 300;">
-                            You have <strong>6 seconds</strong> to make each choice. After selecting, click Next.
+                    <div style="max-width: 650px; margin: 0 auto; text-align: center;">
+                        <h2 style="font-size: 1.5rem; font-weight: 400; color: var(--text-primary); margin: 0 0 1.5rem 0; text-decoration: underline;">Your Task</h2>
+                        
+                        <div style="display: flex; justify-content: center; gap: 3rem; margin-bottom: 2rem;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">1️⃣</div>
+                                <div style="font-size: 1rem; color: var(--text-primary); font-weight: 300;">Choose your preferred<br>option by clicking on it</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">2️⃣</div>
+                                <div style="font-size: 1rem; color: var(--text-primary); font-weight: 300;">Click Next to continue<br>to the next choice</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 1.5rem auto; padding: 1.25rem 2rem; border-left: 4px solid #ffeaa7; background: rgba(252, 212, 158, 0.2); border-radius: 4px; display: inline-block; text-align: left;">
+                            <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                                ⏱️ Important Timing Info
+                            </h3>
+                            <p style="margin: 0; color: var(--text-primary); line-height: 1.5; font-size: 1rem; font-weight: 300;">
+                                You have <strong>6 seconds</strong> to make each choice. After selecting, click Next.
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-top: 1.5rem; font-style: italic; font-weight: 300;">
+                            Make decisions as if they were real. You'll start with practice trials.
                         </p>
                     </div>
                 </div>
@@ -244,4 +358,4 @@ Object.assign(RiskSurveyExperiment.prototype, {
             </div>
         `;
     }
-}); 
+})
