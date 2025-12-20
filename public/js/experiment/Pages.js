@@ -82,6 +82,14 @@ Object.assign(RiskSurveyExperiment.prototype, {
         this.showInstructions();
     },
 
+    // Page switching function - defined as a method on the prototype
+    showInstructionsPage(pageNum) {
+        document.querySelectorAll('.instructions-page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById('instructions-page-' + pageNum).classList.add('active');
+    },
+
     showInstructions() {
         document.body.innerHTML = `
             <style>
@@ -276,7 +284,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 </div>
                 
                 <div class="instructions-buttons">
-                    <button class="next-button" onclick="experiment.showInstructionsPage(2)">Next</button>
+                    <button class="next-button" id="page1-next-btn">Next</button>
                 </div>
             </div>
             
@@ -313,23 +321,24 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 </div>
                 
                 <div class="instructions-buttons">
-                    <button class="next-button" onclick="experiment.showInstructionsPage(1)">Back</button>
-                    <button class="next-button" onclick="experiment.startComprehensionCheck()">Continue</button>
+                    <button class="next-button" id="page2-back-btn">Back</button>
+                    <button class="next-button" id="page2-continue-btn">Continue</button>
                 </div>
             </div>
-            
-            <script>
-                // Add method to experiment object to handle page switching
-                if (!experiment.showInstructionsPage) {
-                    experiment.showInstructionsPage = function(pageNum) {
-                        document.querySelectorAll('.instructions-page').forEach(page => {
-                            page.classList.remove('active');
-                        });
-                        document.getElementById('instructions-page-' + pageNum).classList.add('active');
-                    };
-                }
-            </script>
         `;
+        
+        // Add event listeners after DOM is created (this is the fix!)
+        document.getElementById('page1-next-btn').addEventListener('click', () => {
+            this.showInstructionsPage(2);
+        });
+        
+        document.getElementById('page2-back-btn').addEventListener('click', () => {
+            this.showInstructionsPage(1);
+        });
+        
+        document.getElementById('page2-continue-btn').addEventListener('click', () => {
+            this.startComprehensionCheck();
+        });
     },
 
 
@@ -352,10 +361,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
                         The screen will go fullscreen for the main experiment.
                     </p>
                     <div style="text-align: center;">
-                        <button class="next-button" onclick="experiment.beginMainTrials()">Begin</button>
+                        <button class="next-button" id="begin-main-btn">Begin</button>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Add event listener for begin button
+        document.getElementById('begin-main-btn').addEventListener('click', () => {
+            this.beginMainTrials();
+        });
     }
-})
+});
