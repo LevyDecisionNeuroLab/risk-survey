@@ -222,8 +222,11 @@ class ConsentForm {
     }
 }
 
-// Create and show consent form when page loads
-const consentForm = new ConsentForm();
-document.addEventListener('DOMContentLoaded', () => {
-    consentForm.show();
+// Hook the new consent form into the existing experiment
+Object.assign(RiskSurveyExperiment.prototype, {
+    showConsentForm() {
+        const consentForm = new ConsentForm();
+        consentForm.show();
+    }
 });
+
