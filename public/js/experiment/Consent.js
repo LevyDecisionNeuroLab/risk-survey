@@ -187,19 +187,22 @@ class ConsentForm {
     }
 
     handleConsent(agreed) {
-        if (agreed) {
-            // User agreed - record consent and continue to experiment
-            if (window.experiment) {
-                experiment.consentGiven = true;
-                experiment.consentTimestamp = new Date().toISOString();
-                // Proceed to next step
-                experiment.continueAfterConsent();
-            }
+    if (agreed) {
+        // User agreed - record consent and continue to experiment
+        if (window.experiment && typeof experiment.showWelcomePage === 'function') {
+            experiment.consentGiven = true;
+            experiment.consentTimestamp = new Date().toISOString();
+            experiment.showWelcomePage();
         } else {
-            // User did not agree - show rejection page
-            this.showRejectionPage();
+            console.log("Experiment object not ready yet");
+            setTimeout(() => this.handleConsent(agreed), 500);
         }
+    } else {
+        // User did not agree - show rejection page
+        this.showRejectionPage();
     }
+}
+
 
     showRejectionPage() {
         document.body.innerHTML = `
