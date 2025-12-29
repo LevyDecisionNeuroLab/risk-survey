@@ -4,220 +4,223 @@
  * Approved 7/20/2025
  */
 
-Object.assign(RiskSurveyExperiment.prototype, {
-    
-    showConsentForm() {
-        const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-            document.body.innerHTML = `
-                <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
-                    <div style="text-align: center; max-width: 600px;">
-                        <h1 style="font-size: 2.5rem; font-weight: 300; color: #333; margin-bottom: 1rem;">Desktop Only</h1>
-                        <p style="font-size: 1.2rem; color: #666; line-height: 1.6; font-weight: 300;">
-                            This experiment requires a <strong>desktop or laptop computer</strong>.
-                        </p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
+/**
+ * Consent.js - Yale IRB Consent Form
+ * 
+ * Displays the full Yale IRB consent form and requires:
+ * 1. User reads the full form (scrolled to bottom)
+ * 2. User selects YES or NO (mutually exclusive)
+ * 3. User clicks Submit to proceed
+ */
 
-        document.body.innerHTML = `
-            <style>
-                .consent-container {
-                    width: 100%;
-                    height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    background: #f5f5f5;
-                    overflow: hidden;
-                }
+class ConsentForm {
+    constructor() {
+        this.consentAgreed = false;
+        this.formScrolled = false;
+        this.yesChecked = false;
+        this.noChecked = false;
+    }
 
-                .consent-header {
-                    background: #00356b;
-                    color: white;
-                    padding: 1.5rem 2rem;
-                    text-align: center;
-                    border-bottom: 4px solid #286DC0;
-                }
+    show() {
+        const consentHTML = `
+        <div id="consent-container" style="width: 100%; max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            
+            <div style="text-align: center; background: linear-gradient(135deg, #003366 0%, #005A9C 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 600;">INFORMATION SHEET FOR PARTICIPATION IN A RESEARCH STUDY</h1>
+                <p style="margin: 10px 0 0 0; font-size: 16px;">YALE UNIVERSITY SCHOOL OF MEDICINE</p>
+            </div>
 
-                .consent-header h1 {
-                    margin: 0;
-                    font-size: 1.8rem;
-                    font-weight: 400;
-                }
-
-                .consent-content {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 2rem;
-                    max-width: 900px;
-                    margin: 0 auto;
-                    width: 100%;
-                }
-
-                .consent-text {
-                    background: white;
-                    padding: 2rem;
-                    border-radius: 4px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                    line-height: 1.7;
-                    font-size: 0.95rem;
-                    color: #333;
-                    margin-bottom: 2rem;
-                }
-
-                .consent-text h2 {
-                    font-size: 1.3rem;
-                    margin: 1.5rem 0 0.75rem 0;
-                    color: #00356b;
-                    font-weight: 600;
-                }
-
-                .consent-text p {
-                    margin: 0.75rem 0;
-                }
-
-                .consent-footer {
-                    background: white;
-                    padding: 2rem;
-                    border-top: 2px solid #ddd;
-                }
-
-                .consent-checkbox {
-                    display: flex;
-                    align-items: flex-start;
-                    gap: 1rem;
-                    margin-bottom: 1rem;
-                    padding: 1rem;
-                    background: #f8f9fa;
-                    border-radius: 4px;
-                    border: 2px solid #ddd;
-                    cursor: pointer;
-                    transition: all 200ms;
-                }
-
-                .consent-checkbox:hover {
-                    border-color: #00356b;
-                    background: #fff;
-                }
-
-                .consent-checkbox.selected {
-                    border-color: #00356b;
-                    background: #e3f2fd;
-                }
-
-                .consent-checkbox input[type="checkbox"] {
-                    width: 20px;
-                    height: 20px;
-                    margin-top: 2px;
-                    cursor: pointer;
-                    accent-color: #00356b;
-                }
-
-                .btn-consent {
-                    padding: 0.75rem 2rem;
-                    font-size: 1rem;
-                    font-weight: 600;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: all 200ms;
-                    background: #00356b;
-                    color: white;
-                    min-width: 180px;
-                }
-
-                .btn-consent:hover:not(:disabled) {
-                    background: #002147;
-                }
-
-                .btn-consent:disabled {
-                    background: #ccc;
-                    cursor: not-allowed;
-                    opacity: 0.6;
-                }
-            </style>
-
-            <div class="consent-container">
-                <div class="consent-header">
-                    <h1>INFORMATION SHEET FOR PARTICIPATION IN A RESEARCH STUDY</h1>
-                    <p>YALE UNIVERSITY - YALE UNIVERSITY SCHOOL OF MEDICINE</p>
+            <div id="consent-content" style="max-height: 600px; overflow-y: auto; padding-right: 15px; margin-bottom: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 4px; background: #f9f9f9;">
+                
+                <div style="margin-bottom: 20px;">
+                    <p style="font-weight: 600; color: #003366;">APPROVED BY THE YALE UNIVERSITY IRB 7/20/2025</p>
+                    <p style="margin: 5px 0;">IRB Protocol# 0910005795</p>
                 </div>
 
-                <div class="consent-content">
-                    <div class="consent-text">
-                        <strong>APPROVED BY THE YALE UNIVERSITY IRB 7/20/2025</strong><br>
-                        IRB Protocol# 0910005795
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Study Title:</h2>
+                <p>Neural correlates of decision-making processes</p>
 
-                        <h2>Study Title: Neural correlates of decision-making processes</h2>
-                        <p><strong>Principal Investigator:</strong> Dr. Ifat Levy, ifat.levy@yale.edu</p>
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Principal Investigator:</h2>
+                <p>Dr. Ifat Levy, <a href="mailto:ifat.levy@yale.edu">ifat.levy@yale.edu</a></p>
 
-                        <h2>Research Study Summary:</h2>
-                        <p>We are asking you to join a research study to examine the neural mechanisms of decision making, valuation, and learning.</p>
-                        <p><strong>Study Activities:</strong> You will complete a 5 to 60 minute online task where you make choices between different images, stimuli, and/or lotteries.</p>
-                        <p><strong>Risks:</strong> Minimal risks including potential distress for those with sensitivity about food or eating, and sitting at a computer screen for 5 to 60 minutes.</p>
-                        <p><strong>Benefits:</strong> Results may contribute to understanding of neural processes that mediate decision-making.</p>
-                        <p><strong>Compensation:</strong> Base payment of $1.25 per 5 minutes, up to $15 for 60 minutes. Bonus payments may apply.</p>
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Research Study Summary:</h2>
+                <p>We are asking you to join a research study. The purpose of this research study is to examine the neural mechanisms of decision making, valuation, and learning.</p>
 
-                        <h2>Your Rights:</h2>
-                        <p>Taking part is your choice. You can change your mind at any time without affecting your relationship with Yale University.</p>
+                <h3 style="color: #003366; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">Study Activities:</h3>
+                <p>You will complete a 5 to 60 minute online task where you make choices between different images, stimuli, and/or lotteries. The images/stimuli will consist of positive or mundane images such as food, common objects, and monetary lotteries. Participants may also be asked questionnaires regarding their beliefs and behaviors. Participants can choose not to answer any questions they do not wish to answer. Participants may win additional sums of money based on their task performance.</p>
 
-                        <h2>Questions?</h2>
-                        <p>Contact Dr. Ifat Levy at (203) 737-1374 or ifat.levy@yale.edu. For questions about your rights, contact Yale Institutional Review Boards at (203) 785-4688 or hrpp@yale.edu.</p>
-                    </div>
+                <h3 style="color: #003366; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">Risks:</h3>
+                <p>Minimal risks including potential distress for those with sensitivity about food or eating, possible risk of loss of confidentiality, and the minimal risks associated with sitting at a computer screen for 5 to 60 minutes. There may be additional risks that are currently unforeseeable.</p>
+
+                <h3 style="color: #003366; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">Benefits:</h3>
+                <p>The study may have no benefits to you. However, the results may be of benefit to society at large by contributing to our understanding of neural processes that mediate decision-making.</p>
+
+                <h3 style="color: #003366; margin-top: 15px; margin-bottom: 8px; font-size: 16px;">Compensation:</h3>
+                <p>Base payment of $1.25 per 5 minutes, $2.50 per 10 minutes, $5 per 20 minutes, and up to $15 for 60 minutes. If a bonus payment is earned, it will be added to the base payment. You are responsible for paying state, federal, or other taxes for the payments you receive for being in this study. Taxes are not withheld from your payments.</p>
+
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Your Rights:</h2>
+                <p>Taking part in this study is your choice. You can choose to take part, or you can choose not to take part in this study. You also can change your mind at any time. Whatever choice you make will not have any effect on your relationship with Yale University.</p>
+
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Data Protection and Privacy:</h2>
+                <p>All of your responses will be held in confidence. Only the researchers involved in this study and those responsible for research oversight will have access to any information that could identify you. The identifiable data will be stored until the publication summarizing the results of the respective data collection is completed. Identifiable data is anticipated to be destroyed within seven years after the completion of the study.</p>
+                
+                <p>De-identified data including the sequence of choices that participants make in the decision-making task will be submitted to Open Science Framework. This will include no personal data.</p>
+
+                <p>This research is covered by a Certificate of Confidentiality from the National Institutes of Health. The researchers with this Certificate may not disclose or use information, documents, or biospecimens that may identify you in any federal, state, or local civil, criminal, administrative, legislative, or other action, suit, or proceeding, or be used as evidence, for example, if there is a court subpoena, unless you have consented for this use.</p>
+
+                <h2 style="color: #003366; margin-top: 20px; margin-bottom: 10px; font-size: 18px;">Questions?</h2>
+                <p>If you have questions later or if you have a research-related problem, you can call the Principal Investigator Dr. Ifat Levy at <strong>(203) 737-1374</strong> or email <a href="mailto:ifat.levy@yale.edu">ifat.levy@yale.edu</a>.</p>
+                
+                <p>If you have questions about your rights as a research participant, you can call the Yale Institutional Review Boards at <strong>(203) 785-4688</strong> or email <a href="mailto:hrpp@yale.edu">hrpp@yale.edu</a>.</p>
+
+            </div>
+
+            <!-- Radio Buttons - MUTUALLY EXCLUSIVE -->
+            <div style="margin-bottom: 25px; padding: 20px; background: #f0f8ff; border-left: 4px solid #003366; border-radius: 4px;">
+                <p style="margin-top: 0; font-weight: 600; color: #003366;">I have read and understand this consent form. My choice is:</p>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="consent-choice" id="consent-yes" value="yes" style="width: 20px; height: 20px; cursor: pointer; margin-right: 12px;">
+                        <span style="font-size: 16px; flex: 1;"><strong>I AGREE:</strong> I have read and agree to participate.</span>
+                    </label>
                 </div>
 
-                <div class="consent-footer" style="text-align: center; max-width: 700px; margin: 0 auto; width: 100%;">
-                    <div class="consent-checkbox" id="consent-yes-box" onclick="selectConsent(true)">
-                        <input type="checkbox" id="consent-yes">
-                        <label for="consent-yes"><strong>I AGREE:</strong> I have read and agree to participate.</label>
-                    </div>
-
-                    <div class="consent-checkbox" id="consent-no-box" onclick="selectConsent(false)">
-                        <input type="checkbox" id="consent-no">
-                        <label for="consent-no"><strong>I DO NOT AGREE:</strong> I do not agree to participate.</label>
-                    </div>
-
-                    <button class="btn-consent" id="submit-btn" disabled>Submit Response</button>
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="consent-choice" id="consent-no" value="no" style="width: 20px; height: 20px; cursor: pointer; margin-right: 12px;">
+                        <span style="font-size: 16px; flex: 1;"><strong>I DO NOT AGREE:</strong> I do not agree to participate.</span>
+                    </label>
                 </div>
             </div>
 
-            <script>
-                let consentChoice = null;
+            <!-- Submit Button -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button id="consent-submit-btn" style="
+                    padding: 14px 40px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    background-color: #cccccc;
+                    color: #666;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: not-allowed;
+                    transition: all 0.3s;
+                " disabled>
+                    Submit Response
+                </button>
+                <p id="consent-error" style="color: #d32f2f; margin-top: 10px; display: none; font-weight: 600;"></p>
+            </div>
 
-                function selectConsent(agree) {
-                    consentChoice = agree;
-                    document.getElementById('consent-yes').checked = agree;
-                    document.getElementById('consent-no').checked = !agree;
-                    document.getElementById('consent-yes-box').classList.toggle('selected', agree);
-                    document.getElementById('consent-no-box').classList.toggle('selected', !agree);
-                    document.getElementById('submit-btn').disabled = false;
-                }
+        </div>
+        `;
 
-                document.getElementById('submit-btn').addEventListener('click', () => {
-                    if (consentChoice === null) return;
-                    
-                    experiment.consentGiven = consentChoice;
-                    experiment.recordConsent(consentChoice);
-                    
-                    if (consentChoice) {
-                        experiment.showWelcomePage();
-                    } else {
-                        document.body.innerHTML = \`
-                            <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: #f5f5f5;">
-                                <div style="text-align: center; max-width: 600px; background: white; padding: 3rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                    <h2 style="color: #00356b; margin-bottom: 1.5rem;">Consent Not Given</h2>
-                                    <p style="font-size: 1.1rem; color: #666; margin-bottom: 2rem;">You have declined to participate. Your response has been recorded.</p>
-                                </div>
-                            </div>
-                        \`;
-                        setTimeout(() => {
-                            experiment.downloadConsentReport();
-                        }, 1000);
-                    }
-                });
-            </script>
+        // Clear body and insert consent form
+        document.body.innerHTML = consentHTML;
+        document.body.style.backgroundColor = '#f5f5f5';
+        document.body.style.padding = '20px';
+        document.body.style.fontFamily = 'Arial, sans-serif';
+        document.body.style.lineHeight = '1.6';
+        document.body.style.color = '#333';
+
+        // Get elements
+        const contentDiv = document.getElementById('consent-content');
+        const yesRadio = document.getElementById('consent-yes');
+        const noRadio = document.getElementById('consent-no');
+        const submitBtn = document.getElementById('consent-submit-btn');
+        const errorMsg = document.getElementById('consent-error');
+
+        // Track scroll to bottom
+        contentDiv.addEventListener('scroll', () => {
+            if (contentDiv.scrollHeight - contentDiv.scrollTop <= contentDiv.clientHeight + 10) {
+                this.formScrolled = true;
+                this.updateSubmitButton(submitBtn, yesRadio, noRadio, errorMsg);
+            }
+        });
+
+        // Radio button change handlers
+        yesRadio.addEventListener('change', () => {
+            this.yesChecked = yesRadio.checked;
+            this.noChecked = false;
+            noRadio.checked = false;
+            this.updateSubmitButton(submitBtn, yesRadio, noRadio, errorMsg);
+        });
+
+        noRadio.addEventListener('change', () => {
+            this.noChecked = noRadio.checked;
+            this.yesChecked = false;
+            yesRadio.checked = false;
+            this.updateSubmitButton(submitBtn, yesRadio, noRadio, errorMsg);
+        });
+
+        // Submit button handler
+        submitBtn.addEventListener('click', () => {
+            if (this.yesChecked) {
+                // User agreed - proceed to experiment
+                this.handleConsent(true);
+            } else if (this.noChecked) {
+                // User did not agree - show rejection page
+                this.handleConsent(false);
+            }
+        });
+
+        // Initial button state
+        this.updateSubmitButton(submitBtn, yesRadio, noRadio, errorMsg);
+    }
+
+    updateSubmitButton(btn, yesRadio, noRadio, errorMsg) {
+        const isSelected = yesRadio.checked || noRadio.checked;
+
+        if (isSelected) {
+            btn.style.backgroundColor = '#003366';
+            btn.style.color = 'white';
+            btn.style.cursor = 'pointer';
+            btn.disabled = false;
+            errorMsg.style.display = 'none';
+        } else {
+            btn.style.backgroundColor = '#cccccc';
+            btn.style.color = '#666';
+            btn.style.cursor = 'not-allowed';
+            btn.disabled = true;
+            errorMsg.style.display = 'none';
+        }
+    }
+
+    handleConsent(agreed) {
+        if (agreed) {
+            // User agreed - record consent and continue to experiment
+            if (window.experiment) {
+                experiment.consentGiven = true;
+                experiment.consentTimestamp = new Date().toISOString();
+                // Proceed to next step
+                experiment.continueAfterConsent();
+            }
+        } else {
+            // User did not agree - show rejection page
+            this.showRejectionPage();
+        }
+    }
+
+    showRejectionPage() {
+        document.body.innerHTML = `
+        <div style="width: 100%; max-width: 600px; margin: 50px auto; padding: 30px; text-align: center; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h1 style="color: #d32f2f; margin-bottom: 20px;">Thank You</h1>
+            <p style="font-size: 16px; line-height: 1.8; color: #333; margin-bottom: 20px;">
+                Thank you for your interest in this research study. We respect your decision not to participate.
+            </p>
+            <p style="font-size: 14px; color: #666;">
+                If you have any questions, you can contact Dr. Ifat Levy at <strong>(203) 737-1374</strong> or <strong>ifat.levy@yale.edu</strong>.
+            </p>
+            <p style="font-size: 14px; color: #666; margin-top: 20px; font-style: italic;">
+                Your consent response has been recorded. You may now close this page.
+            </p>
+        </div>
         `;
     }
+}
+
+// Create and show consent form when page loads
+const consentForm = new ConsentForm();
+document.addEventListener('DOMContentLoaded', () => {
+    consentForm.show();
 });
