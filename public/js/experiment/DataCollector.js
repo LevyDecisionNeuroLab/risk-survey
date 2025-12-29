@@ -6,6 +6,11 @@
 // Add data collection methods to the RiskSurveyExperiment class
 Object.assign(RiskSurveyExperiment.prototype, {
     
+    // =====================================================
+    // CONFIGURATION - UPDATE THIS TO YOUR SERVER URL
+    // =====================================================
+    SERVER_URL: 'https://risk-survey-7kcw.onrender.com',
+    
     saveTrialData(trial) {
         const submitTime = (Date.now() - this.trialStartTime) / 1000;
         
@@ -69,8 +74,27 @@ Object.assign(RiskSurveyExperiment.prototype, {
         
         this.csvData.push(escapedRow);
         
+        // Also save to localStorage as backup
+        this.saveBackupToLocalStorage();
+        
         // Debug logging with clearer format
         console.log(`Trial ${this.trialCounter - 1}: choice="${choiceValue}", confidence=${confidenceValue}, ev=${ev}, bar_choice_time=${bar_choice_time}s, confidence_time=${confidence_choice_time}s`);
+    },
+
+    // Backup data to localStorage in case of network issues
+    saveBackupToLocalStorage() {
+        try {
+            const backup = {
+                subjectId: this.subjectId,
+                csvData: this.csvData,
+                attentionCheckData: this.attentionCheckData,
+                timestamp: new Date().toISOString(),
+                sessionId: this.sessionId
+            };
+            localStorage.setItem(`risk_survey_backup_${this.subjectId}`, JSON.stringify(backup));
+        } catch (e) {
+            console.warn('Could not save backup to localStorage:', e);
+        }
     },
 
     saveAttentionCheckData(question, userAnswer, isCorrect, responseTime) {
@@ -88,7 +112,69 @@ Object.assign(RiskSurveyExperiment.prototype, {
         };
         
         this.attentionCheckData.push(attentionCheckRow);
+        
+        // Update backup
+        this.saveBackupToLocalStorage();
+        
         console.log(`Attention Check ${this.attentionCheckData.length}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} - "${userAnswer}"`);
+    },
+
+    // Wake up the server before saving (Render free tier sleeps after 15 min)
+    async wakeUpServer() {
+        try {
+            console.log('Waking up server...');
+            const response = await fetch(`${this.SERVER_URL}/health`, {
+                method: 'GET',
+                cache: 'no-store'
+            });
+            if (response.ok) {
+                console.log('Server is awake!');
+                return true;
+            }
+        } catch (e) {
+            console.log('Server wake-up ping sent');
+        }
+        // Wait a moment for server to fully wake up
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return true;
+    },
+
+    // Retry fetch with exponential backoff
+    async fetchWithRetry(url, options, maxRetries = 3) {
+        let lastError;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`Fetch attempt ${attempt}/${maxRetries} to ${url}`);
+                
+                const response = await fetch(url, {
+                    ...options,
+                    // Add timeout
+                    signal: AbortSignal.timeout(30000) // 30 second timeout
+                });
+                
+                if (response.ok) {
+                    return response;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                lastError = error;
+                console.warn(`Attempt ${attempt} failed:`, error.message);
+                
+                if (attempt < maxRetries) {
+                    // Exponential backoff: 2s, 4s, 8s
+                    const waitTime = Math.pow(2, attempt) * 1000;
+                    console.log(`Waiting ${waitTime/1000}s before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    
+                    // Try to wake up server before retry
+                    await this.wakeUpServer();
+                }
+            }
+        }
+        
+        throw lastError;
     },
 
     async finishExperiment() {
@@ -110,46 +196,67 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 <div class="instructions">
                     <h2>Completing the experiment...</h2>
                     <p>Please wait while your data is being saved.</p>
-                    <div style="margin-top: 1rem; color: #666;">
-                        <small>Saving ${this.csvData.length} trial records for subject ${this.subjectId}...</small>
+                    <div id="save-status" style="margin-top: 1rem; color: #666;">
+                        <small>Preparing to save ${this.csvData.length} trial records for subject ${this.subjectId}...</small>
                     </div>
                 </div>
             </div>`;
+
+        const updateStatus = (message) => {
+            const statusEl = document.getElementById('save-status');
+            if (statusEl) {
+                statusEl.innerHTML = `<small>${message}</small>`;
+            }
+        };
 
         try {
             console.log(`Attempting to save ${this.csvData.length} trials for subject ${this.subjectId}`);
             console.log('Sample data row:', this.csvData[0]);
 
-            // Save main trial data
-            const trialResponse = await fetch('https://risk-survey.onrender.com/save', {
+            // First, wake up the server (Render free tier may be sleeping)
+            updateStatus('Connecting to server...');
+            await this.wakeUpServer();
 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ data: this.csvData.join('') }),
-            });
+            // Save main trial data with retry
+            updateStatus('Saving trial data...');
+            const trialResponse = await this.fetchWithRetry(
+                `${this.SERVER_URL}/save`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: this.csvData.join('') }),
+                }
+            );
 
-            // Save attention check data
-            const attentionResponse = await fetch('https://risk-survey.onrender.com/save-attention', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    participantId: this.subjectId,
-                    data: this.attentionCheckData 
-                }),
-            });
+            console.log('Trial data saved successfully');
 
-            console.log('Trial data response:', await trialResponse.text());
-            console.log('Attention check response:', await attentionResponse.text());
+            // Save attention check data with retry
+            updateStatus('Saving attention check data...');
+            const attentionResponse = await this.fetchWithRetry(
+                `${this.SERVER_URL}/save-attention`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        participantId: this.subjectId,
+                        data: this.attentionCheckData 
+                    }),
+                }
+            );
 
-            if (trialResponse.ok && attentionResponse.ok) {
-                this.showDownloadPage();
-            } else {
-                throw new Error(`Server error saving data`);
-            }
+            console.log('Attention check data saved successfully');
+
+            // Clear backup since save was successful
+            try {
+                localStorage.removeItem(`risk_survey_backup_${this.subjectId}`);
+            } catch (e) {}
+
+            this.showDownloadPage();
+
         } catch (err) {
             console.error('Error saving data:', err);
             this.showDataError(`There was an error saving your data: ${err.message}`);
@@ -163,7 +270,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     <h2>Thank You!</h2>
                     <div style="border: 1px solid #e5e5e5; padding: 2rem; border-radius: 4px; margin: 2rem 0; background: #fafafa;">
                         <p style="font-size: 18px; margin-bottom: 1rem;">You have successfully completed the risk survey task.</p>
-                        <p style="color: green; font-weight: bold; margin-bottom: 2rem;">Your responses have been successfully saved.</p>
+                        <p style="color: green; font-weight: bold; margin-bottom: 2rem;">✓ Your responses have been successfully saved.</p>
                         
                         <div style="margin-top: 1rem; color: #666; font-size: 14px;">
                             <small>Subject ID: ${this.subjectId} | Trials completed: ${this.csvData.length} | Attention checks: ${this.attentionCheckData.length}</small>
@@ -175,6 +282,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
     },
 
     showDataError(message) {
+        // Try to get backup data info
+        let backupInfo = 'No backup available';
+        try {
+            const backup = localStorage.getItem(`risk_survey_backup_${this.subjectId}`);
+            if (backup) {
+                backupInfo = 'Backup saved in browser - please contact researcher';
+            }
+        } catch (e) {}
+
         document.body.innerHTML = `
             <div class="main-container">
                 <div class="instructions">
@@ -187,12 +303,23 @@ Object.assign(RiskSurveyExperiment.prototype, {
                             <p style="font-size: 12px; font-family: monospace; margin: 0;">
                                 Subject ID: ${this.subjectId || 'MISSING'}<br>
                                 Trials collected: ${this.csvData?.length || 0}<br>
-                                Timestamp: ${new Date().toISOString()}
+                                Timestamp: ${new Date().toISOString()}<br>
+                                Backup status: ${backupInfo}
                             </p>
+                        </div>
+                        <div style="margin-top: 1.5rem;">
+                            <button onclick="experiment.retryDataSave()" style="background: #333; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                                🔄 Retry Save
+                            </button>
                         </div>
                     </div>
                     <p>Please screenshot this message and contact the researcher immediately.</p>
                 </div>
             </div>`;
+    },
+
+    // Allow participant to retry saving
+    async retryDataSave() {
+        await this.finishExperiment();
     }
-}); 
+});
