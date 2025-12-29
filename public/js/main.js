@@ -15,7 +15,17 @@
  */
 
 // Initialize experiment when page loads
+// Initialize experiment when page loads
 const experiment = new RiskSurveyExperiment();
 document.addEventListener('DOMContentLoaded', () => {
-    experiment.init();
-}); 
+    // Get Prolific ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    experiment.subjectId = urlParams.get('PROLIFIC_PID') || 'TEST_' + Math.random().toString(36).substr(2, 9);
+    
+    // Initialize data tracking
+    experiment.initializeDataTracking();
+    
+    // Start with consent form
+    experiment.showConsentForm();
+});
+; 
