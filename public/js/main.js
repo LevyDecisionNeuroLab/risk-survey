@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     experiment.initializeDataTracking();
     
     // Start with consent form
-    experiment.showConsentForm();
+// Initialize experiment (loads config, generates trials, shows consent)
+experiment.init();
+
 });
 ; 
