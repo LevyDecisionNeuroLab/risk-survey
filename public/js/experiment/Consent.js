@@ -235,6 +235,7 @@ class ConsentForm {
         </div>
         `;
     }
+     }
 
 // Initialize consent form method - wait for Experiment to be ready
 function initializeConsentForm() {
