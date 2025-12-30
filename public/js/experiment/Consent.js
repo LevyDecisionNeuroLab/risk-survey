@@ -237,10 +237,16 @@ class ConsentForm {
 }
 
 // Hook the new consent form into the existing experiment
-Object.assign(RiskSurveyExperiment.prototype, {
-    showConsentForm() {
+// Hook the new consent form into the existing experiment
+// This runs after both Experiment.js and Consent.js load
+if (window.RiskSurveyExperiment) {
+    RiskSurveyExperiment.prototype.showConsentForm = function() {
+        console.log("✅ showConsentForm() called successfully!");
         const consentForm = new ConsentForm();
         consentForm.show();
-    }
-});
+    };
+    console.log("✅ Consent form method added to RiskSurveyExperiment prototype");
+} else {
+    console.error("❌ RiskSurveyExperiment not found!");
+}
 
