@@ -236,17 +236,20 @@ class ConsentForm {
     }
 }
 
-// Hook the new consent form into the existing experiment
-// Hook the new consent form into the existing experiment
-// This runs after both Experiment.js and Consent.js load
-if (window.RiskSurveyExperiment) {
-    RiskSurveyExperiment.prototype.showConsentForm = function() {
-        console.log("✅ showConsentForm() called successfully!");
-        const consentForm = new ConsentForm();
-        consentForm.show();
-    };
-    console.log("✅ Consent form method added to RiskSurveyExperiment prototype");
-} else {
-    console.error("❌ RiskSurveyExperiment not found!");
+// Initialize consent form method after all scripts are loaded
+function initializeConsentForm() {
+    if (window.RiskSurveyExperiment) {
+        RiskSurveyExperiment.prototype.showConsentForm = function () {
+            console.log("✅ showConsentForm() called successfully!");
+            const consentForm = new ConsentForm();
+            consentForm.show();
+        };
+        console.log("✅ Consent form method added to RiskSurveyExperiment prototype");
+    } else {
+        console.error("❌ RiskSurveyExperiment not found! Retrying...");
+        setTimeout(initializeConsentForm, 100);  // keep trying until Experiment.js is ready
+    }
 }
 
+// Start initialization
+initializeConsentForm();
