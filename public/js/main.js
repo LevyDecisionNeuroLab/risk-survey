@@ -14,9 +14,9 @@
  * 7. main.js               - THIS FILE (starts everything)
  */
 
-// Initialize experiment when page loads
-// Initialize experiment when page loads
+// Create experiment object
 window.experiment = new RiskSurveyExperiment();
+
 document.addEventListener('DOMContentLoaded', () => {
     // Get Prolific ID from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -25,9 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize data tracking
     experiment.initializeDataTracking();
     
-    // Start with consent form
-// Initialize experiment (loads config, generates trials, shows consent)
-experiment.init();
-
+    // Initialize experiment (loads config, generates trials, shows consent)
+    experiment.init();
 });
-; 
