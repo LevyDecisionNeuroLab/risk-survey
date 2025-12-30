@@ -8,7 +8,7 @@
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <!-- Load experiment modules in logical order -->
+    <!-- Load experiment modules in correct order -->
     <script src="js/experiment/Experiment.js"></script>
     <script src="js/experiment/DataExport.js"></script>
     <script src="js/experiment/Pages.js"></script>
@@ -16,8 +16,7 @@
     <script src="js/experiment/TrialManager.js"></script>
     <script src="js/experiment/TrialRunner.js"></script>
     <script src="js/experiment/DataCollector.js"></script>
-    <script src="js/main.js"></script>
-    <!-- Load consent LAST, after experiment is created -->
-    <script src="js/experiment/Consent.js"></script>
+    <script src="js/experiment/Consent.js"></script>  <!-- BEFORE main.js -->
+    <script src="js/main.js"></script>  <!-- LAST - starts everything -->
 </body>
 </html>
