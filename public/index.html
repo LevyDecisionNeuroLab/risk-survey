@@ -8,15 +8,15 @@
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    <!-- Load experiment modules in correct order -->
-    <script src="js/experiment/Experiment.js"></script>
-    <script src="js/experiment/DataExport.js"></script>
+    <!-- Load experiment modules in CORRECT order -->
+    <script src="js/experiment/Experiment.js"></script>       <!-- 1. CORE CLASS FIRST -->
+    <script src="js/experiment/DataExport.js"></script>       <!-- 2. Extends Experiment -->
     <script src="js/experiment/Pages.js"></script>
     <script src="js/experiment/ComprehensionCheck.js"></script>
     <script src="js/experiment/TrialManager.js"></script>
     <script src="js/experiment/TrialRunner.js"></script>
     <script src="js/experiment/DataCollector.js"></script>
-    <script src="js/experiment/Consent.js"></script>  <!-- BEFORE main.js -->
-    <script src="js/main.js"></script>  <!-- LAST - starts everything -->
+    <script src="js/experiment/Consent.js"></script>          <!-- 3. Consent form (adds method to Experiment) -->
+    <script src="js/main.js"></script>                        <!-- 4. LAST - starts everything -->
 </body>
 </html>
