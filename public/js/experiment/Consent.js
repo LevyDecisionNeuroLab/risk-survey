@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Consent.js - Yale University IRB Approved Consent Form
  * IRB Protocol# 0910005795
  * Approved 7/20/2025
@@ -156,10 +156,8 @@ class ConsentForm {
         // Submit button handler
         submitBtn.addEventListener('click', () => {
             if (this.yesChecked) {
-                // User agreed - proceed to experiment
                 this.handleConsent(true);
             } else if (this.noChecked) {
-                // User did not agree - show rejection page
                 this.handleConsent(false);
             }
         });
@@ -186,37 +184,40 @@ class ConsentForm {
         }
     }
 
-        handleConsent(agreed) {
-    if (agreed) {
-        // User agreed - record consent and continue to experiment
-        if (!window.experiment) {
-            console.log("Experiment object not loaded yet");
-            setTimeout(() => this.handleConsent(true), 500);
-            return;
-        }
-        
-        experiment.consentGiven = true;
-        experiment.consentTimestamp = new Date().toISOString();
-        
-        // Try multiple method names
-        if (typeof experiment.showWelcomePage === 'function') {
-            experiment.showWelcomePage();
-        } else if (typeof experiment.nextPage === 'function') {
-            experiment.nextPage();
-        } else if (typeof experiment.start === 'function') {
-            experiment.start();
+    handleConsent(agreed) {
+        if (agreed) {
+            // User agreed - record consent and continue to experiment
+            if (!window.experiment) {
+                console.log("Experiment object not loaded yet, retrying...");
+                setTimeout(() => this.handleConsent(true), 500);
+                return;
+            }
+            
+            window.experiment.consentGiven = true;
+            window.experiment.consentTimestamp = new Date().toISOString();
+            
+            // Try multiple method names for navigation
+            if (typeof window.experiment.showWelcomePage === 'function') {
+                window.experiment.showWelcomePage();
+            } else if (typeof window.experiment.nextPage === 'function') {
+                window.experiment.nextPage();
+            } else if (typeof window.experiment.start === 'function') {
+                window.experiment.start();
+            } else {
+                console.error("No navigation method found. Available methods:", 
+                    Object.getOwnPropertyNames(Object.getPrototypeOf(window.experiment)));
+                // Show error to user
+                document.body.innerHTML = `
+                    <div style="max-width: 600px; margin: 50px auto; padding: 30px; text-align: center; background: white; border-radius: 8px;">
+                        <h2 style="color: #d32f2f;">Configuration Error</h2>
+                        <p>Unable to start the experiment. Please contact the researcher.</p>
+                    </div>`;
+            }
         } else {
-            console.log("No known method found. Available experiment methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(experiment)));
-            setTimeout(() => this.handleConsent(true), 1000);
+            // User did not agree - show rejection page
+            this.showRejectionPage();
         }
-    } else {
-        // User did not agree - show rejection page
-        this.showRejectionPage();
     }
-}
-
-
-
 
     showRejectionPage() {
         document.body.innerHTML = `
@@ -247,7 +248,7 @@ function initializeConsentForm() {
         console.log("✅ Consent form method added to RiskSurveyExperiment prototype");
     } else {
         console.error("❌ RiskSurveyExperiment not found! Retrying...");
-        setTimeout(initializeConsentForm, 100);  // keep trying until Experiment.js is ready
+        setTimeout(initializeConsentForm, 100);
     }
 }
 
