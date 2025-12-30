@@ -16,7 +16,7 @@
 
 // Initialize experiment when page loads
 // Initialize experiment when page loads
-const experiment = new RiskSurveyExperiment();
+window.experiment = new RiskSurveyExperiment();
 document.addEventListener('DOMContentLoaded', () => {
     // Get Prolific ID from URL
     const urlParams = new URLSearchParams(window.location.search);
