@@ -237,9 +237,9 @@ class ConsentForm {
     }
 }
 
-// Initialize consent form method after all scripts are loaded
+// Initialize consent form method - wait for Experiment to be ready
 function initializeConsentForm() {
-    if (window.RiskSurveyExperiment) {
+    if (window.RiskSurveyExperiment && window.RiskSurveyExperiment.prototype) {
         RiskSurveyExperiment.prototype.showConsentForm = function () {
             console.log("✅ showConsentForm() called successfully!");
             const consentForm = new ConsentForm();
@@ -247,10 +247,14 @@ function initializeConsentForm() {
         };
         console.log("✅ Consent form method added to RiskSurveyExperiment prototype");
     } else {
-        console.error("❌ RiskSurveyExperiment not found! Retrying...");
+        console.log("⏳ RiskSurveyExperiment not ready yet, retrying...");
         setTimeout(initializeConsentForm, 100);
     }
 }
 
-// Start initialization
-initializeConsentForm();
+// Wait for DOM to ensure proper timing
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeConsentForm);
+} else {
+    initializeConsentForm();
+}
