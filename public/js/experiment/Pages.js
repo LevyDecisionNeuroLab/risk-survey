@@ -18,11 +18,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     <div style="margin-bottom: 3rem;">
                         <h2 style="font-size: 1.5rem; font-weight: 500; color: var(--text-primary); margin-bottom: 2rem;">Please Enter Your Information</h2>
                         
-                        <div style="margin-bottom: 1.5rem;">
+                                                <div style="margin-bottom: 1.5rem;">
                             <label for="subject-id" style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-primary); text-align: left;">Subject ID:</label>
+                            <p style="font-size: 0.9em; color: #666; margin: 0 0 0.8rem 0; text-align: left; font-weight: 400;">
+                              If participating in-person, enter your Subject ID. If accessing through Prolific, enter your Prolific ID.
+                            </p>
                             <input type="text" id="subject-id" placeholder="Enter your subject ID..." 
                                 style="width: 100%; padding: 16px 20px; font-size: 16px; border: 1px solid #e5e5e5; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
                         </div>
+
                         
                         <div id="id-warning" style="color: var(--risk-red); font-weight: 500; margin-top: 10px; visibility: hidden;">
                             Please enter a valid subject ID to continue.
