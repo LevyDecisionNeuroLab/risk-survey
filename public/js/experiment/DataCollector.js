@@ -74,6 +74,16 @@ Object.assign(RiskSurveyExperiment.prototype, {
         
         this.csvData.push(escapedRow);
         
+        // Store trial data for bonus calculation (only main trials, not practice)
+        // trialCounter is already incremented, so current trial number is trialCounter - 1
+        this.completedTrials.push({
+            trial_number: this.trialCounter - 1,
+            choice: choiceValue,
+            risk_probability: trial.risk_probability || 0,
+            risk_reward: trial.risk_reward || 0,
+            safe_reward: trial.safe_reward || 0
+        });
+        
         // Also save to localStorage as backup
         this.saveBackupToLocalStorage();
         
@@ -255,6 +265,15 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 localStorage.removeItem(`risk_survey_backup_${this.subjectId}`);
             } catch (e) {}
 
+            // Calculate bonus after saving data
+            console.log('\n🎲 Starting bonus calculation...');
+            const bonusResult = this.calculateBonus();
+            this.bonus = bonusResult.bonus;
+            this.selectedTrialForBonus = bonusResult.selectedTrial;
+            
+            console.log(`✅ Final Bonus: $${this.bonus.toFixed(2)}`);
+            console.log(`📊 Bonus Result Summary:`, bonusResult);
+
             this.showDownloadPage();
 
         } catch (err) {
@@ -264,6 +283,20 @@ Object.assign(RiskSurveyExperiment.prototype, {
     },
 
     showDownloadPage() {
+        const bonusDisplay = this.bonus !== null ? `
+            <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.3rem; font-weight: 600;">💸 Your Bonus</h3>
+                <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">
+                    $${this.bonus.toFixed(2)}
+                </div>
+                ${this.selectedTrialForBonus ? `
+                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">
+                        <small>Based on Trial ${this.selectedTrialForBonus.trial_number}</small>
+                    </div>
+                ` : ''}
+            </div>
+        ` : '';
+        
         document.body.innerHTML = `
             <div class="main-container">
                 <div class="instructions">
@@ -271,6 +304,8 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     <div style="border: 1px solid #e5e5e5; padding: 2rem; border-radius: 4px; margin: 2rem 0; background: #fafafa;">
                         <p style="font-size: 18px; margin-bottom: 1rem;">You have successfully completed the risk survey task.</p>
                         <p style="color: green; font-weight: bold; margin-bottom: 2rem;">✓ Your responses have been successfully saved.</p>
+                        
+                        ${bonusDisplay}
                         
                         <div style="margin-top: 1rem; color: #666; font-size: 14px;">
                             <small>Subject ID: ${this.subjectId} | Trials completed: ${this.csvData.length} | Attention checks: ${this.attentionCheckData.length}</small>
@@ -321,5 +356,123 @@ Object.assign(RiskSurveyExperiment.prototype, {
     // Allow participant to retry saving
     async retryDataSave() {
         await this.finishExperiment();
+    },
+
+    /**
+     * Calculate bonus based on randomly selected trial
+     * Returns an object with bonus details
+     */
+    calculateBonus() {
+        console.log('=== BONUS CALCULATION START ===');
+        console.log(`Total completed trials: ${this.completedTrials.length}`);
+        
+        // Get only main trials (trial_number 1-120) with valid choices
+        const mainTrials = this.completedTrials.filter(t => 
+            t.trial_number >= 1 && t.trial_number <= 120 && 
+            (t.choice === 'risk' || t.choice === 'safe')
+        );
+        
+        console.log(`Valid main trials (1-120): ${mainTrials.length}`);
+        
+        if (mainTrials.length === 0) {
+            console.warn('No valid trials found for bonus calculation');
+            return {
+                bonus: 0,
+                selectedTrial: null,
+                reason: 'No valid trials found'
+            };
+        }
+        
+        // Randomly select one trial from 1-120
+        const randomIndex = Math.floor(Math.random() * mainTrials.length);
+        const selectedTrial = mainTrials[randomIndex];
+        
+        console.log(`\n--- RANDOM SELECTION ---`);
+        console.log(`Random index: ${randomIndex} (out of ${mainTrials.length} valid trials)`);
+        console.log(`Selected Trial Number: ${selectedTrial.trial_number}`);
+        console.log(`Selected Trial Details:`, {
+            choice: selectedTrial.choice,
+            risk_probability: selectedTrial.risk_probability,
+            risk_reward: selectedTrial.risk_reward,
+            safe_reward: selectedTrial.safe_reward
+        });
+        
+        let bonus = 0;
+        let win = false;
+        let rewardPoints = 0;
+        
+        if (selectedTrial.choice === 'safe') {
+            console.log(`\n--- SAFE CHOICE CALCULATION ---`);
+            rewardPoints = selectedTrial.safe_reward;
+            console.log(`Choice: SAFE (guaranteed payout)`);
+            console.log(`Safe reward points: ${rewardPoints}`);
+            bonus = this.convertPointsToUSD(rewardPoints);
+            console.log(`Conversion: ${rewardPoints} points → $${bonus.toFixed(2)}`);
+            win = true;
+        } else if (selectedTrial.choice === 'risk') {
+            console.log(`\n--- RISK CHOICE CALCULATION ---`);
+            const probability = selectedTrial.risk_probability; // e.g., 75, 50, or 25
+            const randomRoll = Math.random() * 100; // 0-100
+            
+            console.log(`Choice: RISK (probabilistic)`);
+            console.log(`Risk probability: ${probability}%`);
+            console.log(`Risk reward points: ${selectedTrial.risk_reward}`);
+            console.log(`Random roll: ${randomRoll.toFixed(2)}%`);
+            
+            if (randomRoll <= probability) {
+                // Win - get the risk reward
+                rewardPoints = selectedTrial.risk_reward;
+                console.log(`✓ WIN! (${randomRoll.toFixed(2)}% <= ${probability}%)`);
+                bonus = this.convertPointsToUSD(rewardPoints);
+                console.log(`Conversion: ${rewardPoints} points → $${bonus.toFixed(2)}`);
+                win = true;
+            } else {
+                // Lose - get $0
+                console.log(`✗ LOSE! (${randomRoll.toFixed(2)}% > ${probability}%)`);
+                bonus = 0;
+                rewardPoints = 0;
+                win = false;
+                console.log(`Result: $0.00`);
+            }
+        }
+        
+        console.log(`\n--- FINAL RESULT ---`);
+        console.log(`Bonus Amount: $${bonus.toFixed(2)}`);
+        console.log(`Reward Points: ${rewardPoints}`);
+        console.log(`Win Status: ${win ? 'YES' : 'NO'}`);
+        console.log(`Selected Trial: ${selectedTrial.trial_number}`);
+        console.log('=== BONUS CALCULATION END ===\n');
+        
+        return {
+            bonus: bonus,
+            selectedTrial: selectedTrial,
+            win: win,
+            rewardPoints: rewardPoints
+        };
+    },
+
+    /**
+     * Convert reward points to USD based on scale
+     * Hundreds (100-600): divide by 50
+     * Millions (500,000-1,500,000): divide by 500,000
+     */
+    convertPointsToUSD(points) {
+        let conversionFactor;
+        let scale;
+        
+        if (points >= 500000) {
+            // Millions scale
+            conversionFactor = 500000;
+            scale = 'millions';
+        } else {
+            // Hundreds scale
+            conversionFactor = 50;
+            scale = 'hundreds';
+        }
+        
+        const result = points / conversionFactor;
+        console.log(`  [convertPointsToUSD] ${points} points (${scale} scale) / ${conversionFactor} = $${result.toFixed(2)}`);
+        
+        return result;
     }
 });
