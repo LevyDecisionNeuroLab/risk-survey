@@ -157,20 +157,31 @@ Object.assign(RiskSurveyExperiment.prototype, {
             try {
                 console.log(`Fetch attempt ${attempt}/${maxRetries} to ${url}`);
                 
-                const response = await fetch(url, {
-                    ...options,
-                    // Add timeout
-                    signal: AbortSignal.timeout(30000) // 30 second timeout
-                });
+                // Create timeout using AbortController for better browser compatibility
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
                 
-                if (response.ok) {
-                    return response;
-                } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        return response;
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    throw fetchError;
                 }
             } catch (error) {
                 lastError = error;
-                console.warn(`Attempt ${attempt} failed:`, error.message);
+                const errorMessage = error.name === 'AbortError' ? 'Request timeout' : error.message;
+                console.warn(`Attempt ${attempt} failed:`, errorMessage);
                 
                 if (attempt < maxRetries) {
                     // Exponential backoff: 2s, 4s, 8s
@@ -278,7 +289,18 @@ Object.assign(RiskSurveyExperiment.prototype, {
 
         } catch (err) {
             console.error('Error saving data:', err);
-            this.showDataError(`There was an error saving your data: ${err.message}`);
+            
+            // Provide more helpful error messages
+            let errorMessage = err.message || 'Unknown error';
+            if (err.name === 'AbortError' || errorMessage.includes('timeout')) {
+                errorMessage = 'Request timed out - the server may be slow to respond. Please try again.';
+            } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+                errorMessage = 'Network error - unable to reach the server. Please check your internet connection and try again.';
+            } else if (errorMessage.includes('CORS')) {
+                errorMessage = 'CORS error - the server may not be configured to accept requests from this origin.';
+            }
+            
+            this.showDataError(`There was an error saving your data: ${errorMessage}`);
         }
     },
 
