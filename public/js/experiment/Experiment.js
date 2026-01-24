@@ -27,6 +27,11 @@ class RiskSurveyExperiment {
         // Session tracking
         this.sessionId = `ses_${new Date().toISOString().replace(/[-:]/g, '').substring(0, 15)}`;
         this.sessionStartTime = new Date().toISOString();
+        
+        // Bonus tracking
+        this.completedTrials = []; // Store completed trial data with choices for bonus calculation
+        this.bonus = null; // Store calculated bonus amount
+        this.selectedTrialForBonus = null; // Store the randomly selected trial for bonus
     }
 
     async init() {

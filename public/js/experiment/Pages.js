@@ -105,7 +105,8 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     padding: 1.5rem 3rem;
                     background: var(--bg-primary);
                     box-sizing: border-box;
-                    overflow: hidden;
+                    overflow-y: auto;
+                    overflow-x: hidden;
                 }
                 
                 .instructions-page.active {
@@ -116,15 +117,22 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    justify-content: center;
+                    justify-content: flex-start;
+                    min-height: 0;
+                    overflow-y: auto;
+                    padding-bottom: 1rem;
                 }
                 
                 .instructions-buttons {
                     display: flex;
                     gap: 1rem;
                     justify-content: center;
-                    padding-top: 1rem;
+                    padding: 1rem 0;
                     flex-shrink: 0;
+                    position: sticky;
+                    bottom: 0;
+                    background: var(--bg-primary);
+                    z-index: 10;
                 }
                 
                 .instructions-buttons button {

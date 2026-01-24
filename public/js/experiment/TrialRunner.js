@@ -39,6 +39,16 @@ Object.assign(RiskSurveyExperiment.prototype, {
         
         document.body.innerHTML = `<div class="main-container trial-container-page">${trialHTML}</div>`;
 
+        // Add event listener for Next button
+        const nextButton = document.getElementById('trial-next-btn');
+        if (nextButton) {
+            nextButton.addEventListener('click', () => {
+                if (!nextButton.disabled) {
+                    this.advanceTrial();
+                }
+            });
+        }
+
         // Start timer for main trials (not practice)
         if (!this.isPractice) {
             this.startTrialTimer();
@@ -225,7 +235,10 @@ Object.assign(RiskSurveyExperiment.prototype, {
             <div class="bars-area">
                 <div class="option-container">${leftOption}</div>
                 <div class="option-container">${rightOption}</div>
-               </div>`;
+            </div>
+            <div class="navigation">
+                <button class="next-button" id="trial-next-btn" disabled>Next</button>
+            </div>`;
     },
 
     getSizeClass(sizeCondition, optionType) {
@@ -289,7 +302,10 @@ Object.assign(RiskSurveyExperiment.prototype, {
         selectedElement.classList.add('selected-bar');
     }
     
-    // Auto-advance after choice (no confidence question)
+    // Stop the timer once a choice is made
+    this.clearTimer();
+    
+    // Auto-advance after a short delay to show the selection
     setTimeout(() => {
         this.advanceTrial();
     }, 300);
