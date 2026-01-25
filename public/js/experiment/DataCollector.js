@@ -59,7 +59,9 @@ Object.assign(RiskSurveyExperiment.prototype, {
             ev,                                    // ev (same/safe/risky)
             bar_choice_time,                       // bar_choice_time (seconds from page load to bar choice)
             confidence_choice_time,                // confidence_choice_time (seconds from bar choice to confidence)
-            trial.trial_id || 'unknown'           // trial_id
+            trial.trial_id || 'unknown',          // trial_id
+            'FALSE',                              // is_bonus_trial (will be updated after bonus calculation)
+            ''                                    // bonus_amount (will be updated after bonus calculation)
         ];
         
         // Properly escape CSV fields
@@ -78,6 +80,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
         // trialCounter is already incremented, so current trial number is trialCounter - 1
         this.completedTrials.push({
             trial_number: this.trialCounter - 1,
+            trial_id: trial.trial_id || 'unknown',
             choice: choiceValue,
             risk_probability: trial.risk_probability || 0,
             risk_reward: trial.risk_reward || 0,
@@ -284,6 +287,13 @@ Object.assign(RiskSurveyExperiment.prototype, {
             
             console.log(`✅ Final Bonus: $${this.bonus.toFixed(2)}`);
             console.log(`📊 Bonus Result Summary:`, bonusResult);
+
+            // Update CSV data to mark bonus trial
+            this.updateBonusColumnsInCSV(bonusResult);
+
+            // Save bonus payment data
+            updateStatus('Saving bonus payment data...');
+            await this.saveBonusPaymentData(bonusResult);
 
             this.showDownloadPage();
 
@@ -496,5 +506,105 @@ Object.assign(RiskSurveyExperiment.prototype, {
         console.log(`  [convertPointsToUSD] ${points} points (${scale} scale) / ${conversionFactor} = $${result.toFixed(2)}`);
         
         return result;
+    },
+
+    /**
+     * Update CSV data to mark the bonus trial and add bonus amount
+     */
+    updateBonusColumnsInCSV(bonusResult) {
+        if (!bonusResult.selectedTrial) {
+            console.log('No bonus trial selected, skipping CSV update');
+            return;
+        }
+
+        const bonusTrialNumber = bonusResult.selectedTrial.trial_number;
+        const bonusAmount = bonusResult.bonus.toFixed(2);
+
+        console.log(`Updating CSV data: marking trial ${bonusTrialNumber} as bonus trial with amount $${bonusAmount}`);
+
+        // Update the CSV row for the bonus trial
+        // CSV format: participant_id,trial_number,...,trial_id,is_bonus_trial,bonus_amount
+        this.csvData = this.csvData.map((row, index) => {
+            // Skip header row if present, or parse the row
+            const values = row.trim().split(',').map(v => {
+                // Remove quotes if present
+                if (v.startsWith('"') && v.endsWith('"')) {
+                    return v.slice(1, -1).replace(/""/g, '"');
+                }
+                return v;
+            });
+
+            // Check if this is the bonus trial (trial_number is at index 1)
+            if (values.length > 1) {
+                const trialNum = parseInt(values[1]);
+                if (trialNum === bonusTrialNumber) {
+                    // Update is_bonus_trial and bonus_amount columns
+                    if (values.length >= 16) {
+                        // Row already has bonus columns, update them
+                        values[15] = 'TRUE'; // is_bonus_trial
+                        values[16] = bonusAmount; // bonus_amount
+                    } else {
+                        // Add bonus columns if missing
+                        while (values.length < 16) {
+                            values.push('');
+                        }
+                        values[15] = 'TRUE';
+                        values[16] = bonusAmount;
+                    }
+                    
+                    // Re-escape and reconstruct the row
+                    const escapedValues = values.map(field => {
+                        const str = String(field);
+                        if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+                            return '"' + str.replace(/"/g, '""') + '"';
+                        }
+                        return str;
+                    });
+                    return escapedValues.join(',') + '\n';
+                }
+            }
+            return row;
+        });
+
+        console.log('CSV data updated with bonus information');
+    },
+
+    /**
+     * Save bonus payment data to server
+     */
+    async saveBonusPaymentData(bonusResult) {
+        if (!bonusResult.selectedTrial) {
+            console.log('No bonus trial selected, skipping bonus payment save');
+            return;
+        }
+
+        const bonusPaymentData = {
+            participant_id: this.subjectId,
+            bonus_trial_id: bonusResult.selectedTrial.trial_id || bonusResult.selectedTrial.trial_number,
+            bonus_trial_number: bonusResult.selectedTrial.trial_number,
+            choice_on_bonus: bonusResult.selectedTrial.choice,
+            outcome_amount: bonusResult.bonus.toFixed(2),
+            payment: 'pending', // Will be updated manually by researcher
+            timestamp: new Date().toISOString(),
+            session_id: this.sessionId
+        };
+
+        try {
+            const response = await this.fetchWithRetry(
+                `${this.SERVER_URL}/save-bonus`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bonusPaymentData),
+                }
+            );
+
+            console.log('Bonus payment data saved successfully');
+        } catch (err) {
+            console.error('Error saving bonus payment data:', err);
+            // Don't throw - bonus payment data save failure shouldn't block completion
+        }
     }
 });
