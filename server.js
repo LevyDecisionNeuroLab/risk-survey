@@ -49,7 +49,7 @@ app.get('/download', async (req, res) => {
             return res.status(404).send('No results found');
         }
 
-        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,timestamp";
+        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,is_bonus_trial,bonus_amount,timestamp";
 
         const csvRows = results.map(result => {
             return [
@@ -68,6 +68,8 @@ app.get('/download', async (req, res) => {
                 result.bar_choice_time || '',
                 result.confidence_choice_time || '',
                 result.trial_id || '',
+                result.is_bonus_trial ? 'TRUE' : 'FALSE',
+                result.bonus_amount || '',
                 result.timestamp ? result.timestamp.toISOString() : ''
             ].map(field => {
                 if (typeof field === 'string' && (field.includes(',') || field.includes('"'))) {
@@ -104,7 +106,7 @@ app.post('/save', async (req, res) => {
 
     try {
         const resultCollection = db.collection('result');
-        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id";
+        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,is_bonus_trial,bonus_amount";
         const keys = header.split(',');
         
         const rows = data.split('\n').filter(row => row.trim() !== '');
@@ -119,12 +121,15 @@ app.post('/save', async (req, res) => {
                 const entry = {};
                 keys.forEach((key, keyIndex) => {
                     const value = values[keyIndex];
-                    if (['trial_number', 'confidence', 'risk_probability', 'risk_reward', 'safe_reward', 'safe_probability', 'bar_choice_time', 'confidence_choice_time', 'trial_id'].includes(key)) {
+                    if (['trial_number', 'confidence', 'risk_probability', 'risk_reward', 'safe_reward', 'safe_probability', 'bar_choice_time', 'confidence_choice_time', 'trial_id', 'bonus_amount'].includes(key)) {
                         if (value === 'null' || value === '' || value === undefined) {
                             entry[key] = null;
                         } else {
                             entry[key] = parseFloat(value);
                         }
+                    } else if (key === 'is_bonus_trial') {
+                        // Handle boolean field
+                        entry[key] = value === 'TRUE' || value === 'true' || value === '1';
                     } else {
                         entry[key] = value || '';
                     }
@@ -194,6 +199,67 @@ app.post('/save-attention', async (req, res) => {
     }
 });
 
+// Endpoint to save bonus payment data
+app.post('/save-bonus', async (req, res) => {
+    console.log('POST /save-bonus received');
+    const bonusData = req.body;
+    
+    if (!bonusData.participant_id) {
+        return res.status(400).json({ error: 'No participant ID received.' });
+    }
+
+    try {
+        const bonusCollection = db.collection('bonus_payments');
+        const resultCollection = db.collection('result');
+        
+        // Check if bonus payment already exists for this participant
+        const existing = await bonusCollection.findOne({ 
+            participant_id: bonusData.participant_id 
+        });
+
+        if (existing) {
+            // Update existing record
+            await bonusCollection.updateOne(
+                { participant_id: bonusData.participant_id },
+                { $set: bonusData }
+            );
+            console.log(`Updated bonus payment for participant ${bonusData.participant_id}`);
+        } else {
+            // Insert new record
+            await bonusCollection.insertOne(bonusData);
+            console.log(`Inserted bonus payment for participant ${bonusData.participant_id}`);
+        }
+        
+        // Update the trial record in the result collection to mark it as bonus trial
+        if (bonusData.bonus_trial_number) {
+            await resultCollection.updateOne(
+                { 
+                    participant_id: bonusData.participant_id,
+                    trial_number: bonusData.bonus_trial_number
+                },
+                { 
+                    $set: { 
+                        is_bonus_trial: true,
+                        bonus_amount: parseFloat(bonusData.outcome_amount) || 0
+                    }
+                }
+            );
+            console.log(`Updated trial ${bonusData.bonus_trial_number} for participant ${bonusData.participant_id} with bonus info`);
+        }
+        
+        res.status(200).json({ 
+            success: true, 
+            message: `Bonus payment data saved successfully.` 
+        });
+    } catch (err) {
+        console.error('Error saving bonus payment data:', err);
+        return res.status(500).json({ 
+            error: 'Error saving bonus payment data', 
+            message: err.message 
+        });
+    }
+});
+
 // ===========================================
 // DYNAMIC ROUTES - Must come LAST
 // ===========================================
@@ -240,6 +306,29 @@ app.get('/:urlPath/:password/download-attention', async (req, res) => {
         
     } catch (error) {
         console.error('Error in download-attention route:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+// Route for downloading bonus payments data via /{url}/{password}/download-bonus
+app.get('/:urlPath/:password/download-bonus', async (req, res) => {
+    const { urlPath, password } = req.params;
+    
+    try {
+        const settings = await db.collection('settings').findOne({ url: urlPath });
+        
+        if (!settings) {
+            return res.status(404).send('Page not found');
+        }
+        
+        if (settings.password !== password) {
+            return res.status(401).send('Invalid password');
+        }
+        
+        await serveBonusPaymentsCsv(res);
+        
+    } catch (error) {
+        console.error('Error in download-bonus route:', error);
         res.status(500).send('Server error');
     }
 });
@@ -324,7 +413,7 @@ async function serveCsvResults(res) {
             return res.status(404).send('No results found');
         }
         
-        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,timestamp";
+        const header = "participant_id,trial_number,bar_size_condition,choice,confidence,risk_probability,risk_reward,safe_probability,safe_reward,risk_position,safe_position,ev,bar_choice_time,confidence_choice_time,trial_id,is_bonus_trial,bonus_amount,timestamp";
         
         const csvRows = results.map(result => {
             return [
@@ -343,6 +432,8 @@ async function serveCsvResults(res) {
                 result.bar_choice_time || '',
                 result.confidence_choice_time || '',
                 result.trial_id || '',
+                result.is_bonus_trial ? 'TRUE' : 'FALSE',
+                result.bonus_amount || '',
                 result.timestamp ? result.timestamp.toISOString() : ''
             ].map(field => {
                 if (typeof field === 'string' && (field.includes(',') || field.includes('"'))) {
@@ -407,6 +498,45 @@ async function serveAttentionCheckCsv(res) {
     }
 }
 
+async function serveBonusPaymentsCsv(res) {
+    try {
+        const bonusCollection = db.collection('bonus_payments');
+        const results = await bonusCollection.find({}).sort({ timestamp: 1 }).toArray();
+        
+        if (results.length === 0) {
+            return res.status(404).send('No bonus payment data found');
+        }
+        
+        const header = "participant_id,bonus_trial_id,bonus_trial_number,choice_on_bonus,outcome_amount,payment";
+        
+        const csvRows = results.map(result => {
+            return [
+                result.participant_id || '',
+                result.bonus_trial_id || '',
+                result.bonus_trial_number || '',
+                result.choice_on_bonus || '',
+                result.outcome_amount || '',
+                result.payment || 'pending'
+            ].map(field => {
+                if (typeof field === 'string' && (field.includes(',') || field.includes('"'))) {
+                    return `"${field.replace(/"/g, '""')}"`;
+                }
+                return field;
+            }).join(',');
+        });
+        
+        const csvContent = [header, ...csvRows].join('\n');
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="bonus_payments_${new Date().toISOString().split('T')[0]}.csv"`);
+        res.send(csvContent);
+        
+    } catch (error) {
+        console.error('Error generating bonus payments CSV:', error);
+        res.status(500).send('Error generating bonus payments CSV file');
+    }
+}
+
 async function showDownloadPage(res, urlPath, password) {
     const downloadPageHTML = `
         <!DOCTYPE html>
@@ -440,6 +570,8 @@ async function showDownloadPage(res, urlPath, password) {
                 .trial-data-button:hover { background: #1d4ed8; }
                 .attention-data-button { background: #dc2626; color: white; }
                 .attention-data-button:hover { background: #b91c1c; }
+                .bonus-data-button { background: #16a34a; color: white; }
+                .bonus-data-button:hover { background: #15803d; }
             </style>
         </head>
         <body>
@@ -453,10 +585,14 @@ async function showDownloadPage(res, urlPath, password) {
                     <a href="/${urlPath}/${password}/download-attention" class="download-button attention-data-button">
                         ⚠️ Download Attention Check Data (CSV)
                     </a>
+                    <a href="/${urlPath}/${password}/download-bonus" class="download-button bonus-data-button">
+                        💸 Download Bonus Payments (CSV)
+                    </a>
                 </div>
                 <p style="font-size: 14px; color: #999; margin-top: 3rem;">
                     Trial data contains participant responses to risk choices.<br>
-                    Attention check data contains validation question responses.
+                    Attention check data contains validation question responses.<br>
+                    Bonus payments data contains payment tracking information.
                 </p>
             </div>
         </body>
