@@ -334,14 +334,9 @@ Object.assign(RiskSurveyExperiment.prototype, {
                                 At the end of the task, one trial will be randomly selected to determine your bonus.
                             </p>
                             <ul style="margin: 0 0 1rem 0; padding-left: 1.5rem; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem; font-weight: 300; text-align: left;">
-                                <li style="margin-bottom: 0.5rem;">If you chose the <strong>safe option</strong> on that trial, you'll receive a <strong>guaranteed payout</strong> based on the number of points shown.</li>
-                                <li style="margin-bottom: 0.5rem;">If you chose the <strong>risky option</strong>, you'll have a chance to receive a larger bonus — but you may also get <strong>$0</strong>, depending on the probability shown on that trial.</li>
+                                <li style="margin-bottom: 0.5rem;">If you chose the <strong>guaranteed outcome</strong> on that trial, you'll receive a <strong>guaranteed payout</strong> based on the number of points shown.</li>
+                                <li style="margin-bottom: 0.5rem;">If you chose the <strong>lottery option</strong>, you'll have a chance to receive a larger bonus — but you may also get <strong>$0</strong>, depending on the probability shown on that trial.</li>
                             </ul>
-                            <p style="margin: 0; color: var(--text-primary); line-height: 1.6; font-size: 0.95rem; font-weight: 300;">
-                                Your bonus will be calculated as follows:<br>
-                                • Points in the <strong>hundreds</strong> will be divided by <strong>50</strong><br>
-                                • Points in the <strong>millions</strong> will be divided by <strong>500,000</strong>
-                            </p>
                             <p style="margin: 1rem 0 0 0; color: var(--text-secondary); line-height: 1.4; font-size: 0.9rem; font-style: italic; font-weight: 300;">
                                 Bonuses will range from $0 to approximately $17, with most bonuses around $3–4.
                             </p>
