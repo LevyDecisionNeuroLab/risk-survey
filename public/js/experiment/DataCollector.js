@@ -284,6 +284,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
             const bonusResult = this.calculateBonus();
             this.bonus = bonusResult.bonus;
             this.selectedTrialForBonus = bonusResult.selectedTrial;
+            this.bonusResult = bonusResult; // Store full result for display
             
             console.log(`✅ Final Bonus: $${this.bonus.toFixed(2)}`);
             console.log(`📊 Bonus Result Summary:`, bonusResult);
@@ -315,26 +316,90 @@ Object.assign(RiskSurveyExperiment.prototype, {
     },
 
     showDownloadPage() {
-        const bonusDisplay = this.bonus !== null ? `
-            <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
-                <h3 style="margin: 0 0 1rem 0; font-size: 1.3rem; font-weight: 600;">💸 Your Bonus</h3>
-                <div style="font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem;">
-                    $${this.bonus.toFixed(2)}
-                </div>
-                ${this.selectedTrialForBonus ? `
-                    <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">
-                        <small>Based on Trial ${this.selectedTrialForBonus.trial_number}</small>
+        let bonusDisplay = '';
+        
+        if (this.bonus !== null && this.bonusResult && this.selectedTrialForBonus) {
+            const trial = this.selectedTrialForBonus;
+            const bonusResult = this.bonusResult;
+            
+            // Determine if it's a hundreds or millions trial
+            const isMillions = trial.risk_reward >= 500000 || trial.safe_reward >= 500000;
+            const conversionFactor = isMillions ? 500000 : 50;
+            const scaleType = isMillions ? 'millions' : 'hundreds';
+            
+            // Format lottery option description
+            const lotteryProb = trial.risk_probability;
+            const lotteryWinProb = lotteryProb;
+            const lotteryLoseProb = 100 - lotteryProb;
+            const lotteryOptionText = `Lottery option: ${lotteryWinProb}% chance to win ${trial.risk_reward} points; ${lotteryLoseProb}% chance to win 0 points`;
+            
+            // Format guaranteed outcome description
+            const guaranteedOptionText = `Guaranteed outcome: ${trial.safe_reward} points (100% chance)`;
+            
+            // Determine choice made
+            const choiceMade = trial.choice === 'risk' ? 'Lottery' : 'Guaranteed outcome';
+            
+            // Determine outcome
+            let outcomeText = '';
+            let pointsWon = 0;
+            if (trial.choice === 'safe') {
+                pointsWon = trial.safe_reward;
+                outcomeText = `Won ${pointsWon} points`;
+            } else if (trial.choice === 'risk') {
+                if (bonusResult.win) {
+                    pointsWon = trial.risk_reward;
+                    outcomeText = `Won ${pointsWon} points`;
+                } else {
+                    pointsWon = 0;
+                    outcomeText = `Won 0 points`;
+                }
+            }
+            
+            // Format conversion
+            const conversionText = pointsWon > 0 
+                ? `${pointsWon} ÷ ${conversionFactor} = $${this.bonus.toFixed(2)}`
+                : `$0.00`;
+            
+            bonusDisplay = `
+                <div style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem; font-weight: 600;">💸 Bonus Breakdown (Trial ${trial.trial_number})</h3>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.15); padding: 1.5rem; border-radius: 6px; margin-bottom: 1rem; text-align: left;">
+                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6;">
+                            <strong>${lotteryOptionText}</strong>
+                        </div>
+                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6;">
+                            <strong>${guaranteedOptionText}</strong>
+                        </div>
                     </div>
-                ` : ''}
-            </div>
-        ` : '';
+                    
+                    <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+                            <strong>Your choice:</strong> ${choiceMade}
+                        </div>
+                        <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+                            <strong>Outcome:</strong> ${outcomeText}
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.25); padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">
+                            Final Bonus: $${this.bonus.toFixed(2)}
+                        </div>
+                        <div style="font-size: 0.9rem; opacity: 0.95;">
+                            Point-to-$ conversion: ${conversionText}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         
         document.body.innerHTML = `
             <div class="main-container">
                 <div class="instructions">
                     <h2>Thank You!</h2>
                     <div style="border: 1px solid #e5e5e5; padding: 2rem; border-radius: 4px; margin: 2rem 0; background: #fafafa;">
-                        <p style="font-size: 18px; margin-bottom: 1rem;">You have successfully completed the risk survey task.</p>
+                        <p style="font-size: 18px; margin-bottom: 1rem;">You have successfully completed the decision-making task.</p>
                         <p style="color: green; font-weight: bold; margin-bottom: 2rem;">✓ Your responses have been successfully saved.</p>
                         
                         ${bonusDisplay}
