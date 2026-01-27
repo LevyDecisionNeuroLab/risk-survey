@@ -361,32 +361,32 @@ Object.assign(RiskSurveyExperiment.prototype, {
                 : `$0.00`;
             
             bonusDisplay = `
-                <div style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
-                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem; font-weight: 600;">💸 Bonus Breakdown (Trial ${trial.trial_number})</h3>
+                <div style="margin-top: 2rem; padding: 1.5rem; border: 1px solid #e5e5e5; border-radius: 4px; background: #fafafa;">
+                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.3rem; font-weight: 600; color: var(--text-primary);">💸 Bonus Breakdown (Trial ${trial.trial_number})</h3>
                     
-                    <div style="background: rgba(255, 255, 255, 0.15); padding: 1.5rem; border-radius: 6px; margin-bottom: 1rem; text-align: left;">
-                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6;">
+                    <div style="margin-bottom: 1rem; text-align: left;">
+                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6; color: var(--text-primary);">
                             <strong>${lotteryOptionText}</strong>
                         </div>
-                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6;">
+                        <div style="margin-bottom: 0.75rem; font-size: 1rem; line-height: 1.6; color: var(--text-primary);">
                             <strong>${guaranteedOptionText}</strong>
                         </div>
                     </div>
                     
-                    <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                        <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+                    <div style="margin-bottom: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5;">
+                        <div style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">
                             <strong>Your choice:</strong> ${choiceMade}
                         </div>
-                        <div style="font-size: 1rem; margin-bottom: 0.5rem;">
+                        <div style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary);">
                             <strong>Outcome:</strong> ${outcomeText}
                         </div>
                     </div>
                     
-                    <div style="background: rgba(255, 255, 255, 0.25); padding: 1rem; border-radius: 6px; margin-top: 1rem;">
-                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">
+                    <div style="padding-top: 1rem; border-top: 1px solid #e5e5e5;">
+                        <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
                             Final Bonus: $${this.bonus.toFixed(2)}
                         </div>
-                        <div style="font-size: 0.9rem; opacity: 0.95;">
+                        <div style="font-size: 0.95rem; color: var(--text-secondary);">
                             Point-to-$ conversion: ${conversionText}
                         </div>
                     </div>
@@ -463,7 +463,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
         console.log('=== BONUS CALCULATION START ===');
         console.log(`Total completed trials: ${this.completedTrials.length}`);
         
-        // Get only main trials (trial_number 1-120) with valid choices
+        // Get only main trials (trial_number 1-20) with valid choices
         const mainTrials = this.completedTrials.filter(t => 
             t.trial_number >= 1 && t.trial_number <= 120 && 
             (t.choice === 'risk' || t.choice === 'safe')
