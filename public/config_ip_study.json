@@ -1,0 +1,22 @@
+{
+  "studyType": "ip",
+  "phase": 1,
+  "experimentConfig": {
+    "practiceTrials": 0,
+    "mainTrials": 126,
+    "attentionChecks": 0,
+    "trialDuration": 6000,
+    "barSizes": {
+      "large": { "width": 180, "height": 540 },
+      "small": { "width": 75, "height": 200 }
+    },
+    "fontSizes": { "small": 10, "medium": 14, "large": 22 }
+  },
+  "phase2Config": {
+    "trials": 84,
+    "coreTrials": 72,
+    "dummyTrials": 12,
+    "trialDuration": 6000
+  },
+  "attentionCheckQuestions": []
+}

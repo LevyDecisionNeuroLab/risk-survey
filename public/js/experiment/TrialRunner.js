@@ -3,9 +3,20 @@
  * Handles running individual trials, timers, user input, and attention checks
  */
 
-// Utility function to format numbers with commas
+// Format numbers: add commas only to the integer part (so 23.3333 stays "23.33", not "23.3,333")
 function formatNumberWithCommas(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const n = Number(num);
+    if (Number.isNaN(n)) return String(num);
+    const str = n.toString();
+    const i = str.indexOf('.');
+    if (i === -1) {
+        return str.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    const intPart = str.slice(0, i).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const decPart = str.slice(i + 1);
+    // Show up to 4 decimal places, trim trailing zeros
+    const decTrimmed = decPart.replace(/0+$/, '').slice(0, 4);
+    return decTrimmed ? intPart + '.' + decTrimmed : intPart;
 }
 
 // Add trial execution methods to the RiskSurveyExperiment class
@@ -34,7 +45,8 @@ Object.assign(RiskSurveyExperiment.prototype, {
         this.clearTimer();
         this.resetTrialState();
 
-        const totalTrials = this.isPractice ? this.practiceTrials.length : this.trials.length;
+        const totalTrials = this.phase2Active ? this.currentTimeline.length
+            : (this.isPractice ? this.practiceTrials.length : this.trials.length);
         const trialHTML = this.createTrialHTML(trial, totalTrials);
         
         document.body.innerHTML = `<div class="main-container trial-container-page">${trialHTML}</div>`;

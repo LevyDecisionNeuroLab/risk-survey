@@ -32,18 +32,30 @@ class RiskSurveyExperiment {
         this.completedTrials = []; // Store completed trial data with choices for bonus calculation
         this.bonus = null; // Store calculated bonus amount
         this.selectedTrialForBonus = null; // Store the randomly selected trial for bonus
+
+        // Indifference Point (IP) study
+        this.studyType = 'risk-survey'; // 'risk-survey' | 'ip'
+        this.indifferencePoints = []; // 18 IPs per participant after Phase 1
+        this.phase2Active = false; // true when running Phase 2 (size manipulation at IPs)
+        this.phase1RowCount = 0;   // number of Phase 1 rows in csvData (126), so Phase 2 save sends only new rows
     }
 
     async init() {
         try {
-            const response = await fetch('config.json');
+            // Check for IP study via URL param (?study=ip)
+            const urlParams = new URLSearchParams(window.location.search);
+            this.studyType = urlParams.get('study') === 'ip' ? 'ip' : 'risk-survey';
+
+            const configPath = this.studyType === 'ip' ? 'config_ip_study.json' : 'config.json';
+            const response = await fetch(configPath);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const config = await response.json();
             this.experimentConfig = config.experimentConfig;
-            this.attentionCheckQuestions = config.attentionCheckQuestions;
-            
+            this.attentionCheckQuestions = config.attentionCheckQuestions || [];
+            if (config.studyType) this.studyType = config.studyType;
+
             await this.generateTrials();
             this.showWelcomePage();
         } catch (error) {

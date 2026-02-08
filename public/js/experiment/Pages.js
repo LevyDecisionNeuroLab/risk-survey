@@ -371,19 +371,26 @@ Object.assign(RiskSurveyExperiment.prototype, {
 
 
     startMainTrials() {
+        const isIP = this.studyType === 'ip';
+        const mainCount = this.experimentConfig?.mainTrials ?? 120;
+        const title = isIP ? 'Ready for Phase 1' : '🎉 Practice Complete!';
+        const subtitle = isIP
+            ? 'You will now complete the calibration trials (no size manipulation).'
+            : 'Great! You\'re now ready for the main experiment.';
+
         document.body.innerHTML = `
             <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
                 <div style="text-align: center; max-width: 600px;">
-                    <h2 style="color: var(--text-primary); margin-bottom: 2rem; font-size: 2.5rem; font-weight: 300;">🎉 Practice Complete!</h2>
+                    <h2 style="color: var(--text-primary); margin-bottom: 2rem; font-size: 2.5rem; font-weight: 300;">${title}</h2>
                     <p style="font-size: 1.3rem; color: var(--text-secondary); margin-bottom: 3rem; line-height: 1.6; font-weight: 300;">
-                        Great! You're now ready for the main experiment.
+                        ${subtitle}
                     </p>
                     <div style="margin: 3rem 0; padding: 2rem; border-left: 4px solid #c3e6c3;">
                         <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.4rem;">📊 What's Next</h3>
-                       <ul style="margin-bottom: 0; color: var(--text-primary); line-height: 1.6; text-align: left; font-size: 1.1rem;">
-    <li style="margin-bottom: 0.8rem;"><strong>${this.config?.mainTrials || 120} decision trials</strong></li>
-    <li style="margin-bottom: 0.8rem;"><strong>6-second timer</strong> for each choice</li>
-</ul>
+                        <ul style="margin-bottom: 0; color: var(--text-primary); line-height: 1.6; text-align: left; font-size: 1.1rem;">
+                            <li style="margin-bottom: 0.8rem;"><strong>${mainCount} decision trials</strong></li>
+                            <li style="margin-bottom: 0.8rem;"><strong>6-second timer</strong> for each choice</li>
+                        </ul>
                     </div>
                     <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 3rem; font-weight: 300;">
                         The screen will go fullscreen for the main experiment.
