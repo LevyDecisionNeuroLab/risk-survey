@@ -21,15 +21,6 @@ A web-based risk survey experiment for behavioral research.
    ```
    - Open http://localhost:3000 in your browser
 
-## Indifference Point (IP) Study
-
-A two-phase study: (1) calibrate each participant's **indifference point** for 18 lotteries; (2) test whether visual size shifts that point.
-
-- **Run IP study:** Open `http://localhost:3000?study=ip` in your browser.
-- **Phase 1:** 126 trials (18 lotteries × 7 safe levels), no size manipulation. At the end, 18 indifference points are computed and shown (with optional CSV download). Option to **Continue to Phase 2**.
-- **Phase 2:** 84 trials total: 72 core (18 lotteries × 4 size conditions) with safe = participant's Phase 1 IP, plus 12 dummy trials (dominant risky choices, interleaved for engagement). Trial order randomized. Data (Phase 1 + Phase 2) saved together; dummy trials have `trial_id` prefix `dummy_` for analysis.
-- **Files:** `public/config_ip_study.json`, `public/ip_phase1_trials.csv`, `public/ip_phase2_template.csv`, `public/ip_phase2_dummy_trials.csv`.
-
 ## Trial Generation
 
 Generate new trial configurations:

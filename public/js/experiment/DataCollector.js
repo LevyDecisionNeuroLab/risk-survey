@@ -78,16 +78,14 @@ Object.assign(RiskSurveyExperiment.prototype, {
         
         // Store trial data for bonus calculation (only main trials, not practice)
         // trialCounter is already incremented, so current trial number is trialCounter - 1
-        const completedEntry = {
+        this.completedTrials.push({
             trial_number: this.trialCounter - 1,
             trial_id: trial.trial_id || 'unknown',
             choice: choiceValue,
             risk_probability: trial.risk_probability || 0,
             risk_reward: trial.risk_reward || 0,
             safe_reward: trial.safe_reward || 0
-        };
-        if (trial.combination_id != null) completedEntry.combination_id = trial.combination_id;
-        this.completedTrials.push(completedEntry);
+        });
         
         // Also save to localStorage as backup
         this.saveBackupToLocalStorage();
@@ -132,63 +130,6 @@ Object.assign(RiskSurveyExperiment.prototype, {
         this.saveBackupToLocalStorage();
         
         console.log(`Attention Check ${this.attentionCheckData.length}: ${isCorrect ? 'CORRECT' : 'INCORRECT'} - "${userAnswer}"`);
-    },
-
-    /**
-     * Compute 18 indifference points from Phase 1 choices (IP study only).
-     * For each combination_id: order trials by safe_reward (safe_level_1..7), find switch from Risk to Safe; IP = midpoint between last-risky and first-safe safe level.
-     * Edge cases: always risky -> IP = lowest safe value (lower bound); always safe -> IP = highest safe value (upper bound).
-     */
-    computeIndifferencePoints() {
-        if (!this.completedTrials.length || this.completedTrials.some(t => t.combination_id == null)) {
-            return [];
-        }
-        const byCombo = {};
-        this.completedTrials.forEach(t => {
-            const cid = t.combination_id;
-            if (!byCombo[cid]) byCombo[cid] = [];
-            byCombo[cid].push({ safe_reward: t.safe_reward, choice: t.choice });
-        });
-        const results = [];
-        for (let cid = 1; cid <= 18; cid++) {
-            const trials = byCombo[cid] || [];
-            if (trials.length === 0) {
-                const firstTrial = this.completedTrials.find(t => t.combination_id === cid);
-                results.push({ combination_id: cid, risk_reward: firstTrial?.risk_reward ?? null, risk_probability: firstTrial?.risk_probability ?? null, indifference_point: null, quality: 'missing' });
-                continue;
-            }
-            trials.sort((a, b) => a.safe_reward - b.safe_reward);
-            const safeAmounts = trials.map(t => t.safe_reward);
-            const choices = trials.map(t => t.choice);
-            let indifferencePoint;
-            let quality = 'ok';
-            const lastRiskIdx = choices.map((c, i) => c === 'risk' ? i : -1).filter(i => i >= 0).pop();
-            const firstSafeIdx = choices.map((c, i) => c === 'safe' ? i : -1).find(i => i >= 0);
-            if (lastRiskIdx == null && firstSafeIdx == null) {
-                indifferencePoint = (safeAmounts[0] + safeAmounts[safeAmounts.length - 1]) / 2;
-                quality = 'no_switch';
-            } else if (lastRiskIdx == null) {
-                indifferencePoint = safeAmounts[safeAmounts.length - 1];
-                quality = 'always_safe';
-            } else if (firstSafeIdx == null) {
-                indifferencePoint = safeAmounts[0];
-                quality = 'always_risky';
-            } else {
-                const lastRiskSafe = safeAmounts[lastRiskIdx];
-                const firstSafeSafe = safeAmounts[firstSafeIdx];
-                indifferencePoint = (lastRiskSafe + firstSafeSafe) / 2;
-            }
-            const firstTrial = this.completedTrials.find(t => t.combination_id === cid);
-            results.push({
-                combination_id: cid,
-                risk_reward: firstTrial ? firstTrial.risk_reward : null,
-                risk_probability: firstTrial ? firstTrial.risk_probability : null,
-                indifference_point: Math.round(indifferencePoint * 100) / 100,
-                quality
-            });
-        }
-        this.indifferencePoints = results;
-        return results;
     },
 
     // Wake up the server before saving (Render free tier sleeps after 15 min)
@@ -302,10 +243,6 @@ Object.assign(RiskSurveyExperiment.prototype, {
 
             // Save main trial data with retry
             updateStatus('Saving trial data...');
-            // IP Study Phase 2: Phase 1 was already saved (126 rows); send only Phase 2 rows (84) to avoid duplicating Phase 1
-            const dataToSave = (this.studyType === 'ip' && this.phase2Active && this.phase1RowCount > 0)
-                ? this.csvData.slice(this.phase1RowCount).join('')
-                : this.csvData.join('');
             const trialResponse = await this.fetchWithRetry(
                 `${this.SERVER_URL}/save`,
                 {
@@ -313,59 +250,49 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ data: dataToSave }),
+                    body: JSON.stringify({ data: this.csvData.join('') }),
                 }
             );
 
-            console.log('Trial data saved successfully', this.phase2Active ? `(Phase 2 only: ${this.csvData.length - this.phase1RowCount} rows)` : '');
+            console.log('Trial data saved successfully');
 
-            // Save attention check data (skip if none, e.g. IP study)
-            if (this.attentionCheckData && this.attentionCheckData.length > 0) {
-                updateStatus('Saving attention check data...');
-                await this.fetchWithRetry(
-                    `${this.SERVER_URL}/save-attention`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ participantId: this.subjectId, data: this.attentionCheckData }),
-                    }
-                );
-                console.log('Attention check data saved successfully');
-            }
+            // Save attention check data with retry
+            updateStatus('Saving attention check data...');
+            const attentionResponse = await this.fetchWithRetry(
+                `${this.SERVER_URL}/save-attention`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        participantId: this.subjectId,
+                        data: this.attentionCheckData 
+                    }),
+                }
+            );
+
+            console.log('Attention check data saved successfully');
 
             // Clear backup since save was successful
             try {
                 localStorage.removeItem(`risk_survey_backup_${this.subjectId}`);
             } catch (e) {}
 
-            // Indifference Point study: Phase 2 complete (no bonus, no IP recompute)
-            if (this.studyType === 'ip' && this.phase2Active) {
-                console.log('[IP Study] Phase 2 complete. Total trials saved:', this.csvData.length);
-                this.showIPPhase2CompletePage();
-                return;
-            }
-
-            // Indifference Point study: Phase 1 complete – compute 18 IPs and show Phase 1 page (no bonus)
-            if (this.studyType === 'ip') {
-                this.phase1RowCount = this.csvData.length; // so Phase 2 completion saves only new rows
-                const ips = this.computeIndifferencePoints();
-                console.log('[IP Study] Computed 18 indifference points:', ips);
-                this.showIPPhase1CompletePage();
-                return;
-            }
-
-            // Risk-survey study: bonus calculation and payment
+            // Calculate bonus after saving data
             console.log('\n🎲 Starting bonus calculation...');
             const bonusResult = this.calculateBonus();
             this.bonus = bonusResult.bonus;
             this.selectedTrialForBonus = bonusResult.selectedTrial;
-            this.bonusResult = bonusResult;
+            this.bonusResult = bonusResult; // Store full result for display
             
             console.log(`✅ Final Bonus: $${this.bonus.toFixed(2)}`);
             console.log(`📊 Bonus Result Summary:`, bonusResult);
 
+            // Update CSV data to mark bonus trial
             this.updateBonusColumnsInCSV(bonusResult);
 
+            // Save bonus payment data
             updateStatus('Saving bonus payment data...');
             await this.saveBonusPaymentData(bonusResult);
 
@@ -486,141 +413,6 @@ Object.assign(RiskSurveyExperiment.prototype, {
             </div>`;
     },
 
-    /**
-     * Indifference Point study: show Phase 1 complete with 18 IPs and optional CSV download.
-     */
-    showIPPhase1CompletePage() {
-        const ips = this.indifferencePoints || [];
-        const tableRows = ips.map(row => `
-            <tr>
-                <td>${row.combination_id}</td>
-                <td>${row.risk_reward}</td>
-                <td>${row.risk_probability}%</td>
-                <td>${row.indifference_point}</td>
-                <td>${row.quality}</td>
-            </tr>
-        `).join('');
-
-        const ipCsvHeader = 'participant_id,combination_id,risk_reward,risk_probability,indifference_point,quality\n';
-        const ipCsvRows = ips.map(row => 
-            [this.subjectId, row.combination_id, row.risk_reward, row.risk_probability, row.indifference_point, row.quality].join(',')
-        ).join('\n');
-        const ipCsvContent = ipCsvHeader + ipCsvRows;
-        const ipCsvBlob = new Blob([ipCsvContent], { type: 'text/csv' });
-        const ipCsvUrl = URL.createObjectURL(ipCsvBlob);
-
-        document.body.innerHTML = `
-            <div class="main-container">
-                <div class="instructions">
-                    <h2>Phase 1 Complete</h2>
-                    <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        Thank you. Your trial data has been saved and 18 indifference points have been computed.
-                    </p>
-                    <p style="color: green; font-weight: bold; margin-bottom: 1.5rem;">✓ Your responses have been successfully saved.</p>
-                    <h3 style="font-size: 1.2rem; margin-bottom: 0.75rem;">Indifference points (18 lotteries)</h3>
-                    <div style="overflow-x: auto; margin: 1rem 0; border: 1px solid #e5e5e5; border-radius: 4px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                            <thead>
-                                <tr style="background: #f5f5f5;">
-                                    <th style="padding: 8px; text-align: left;">Lottery</th>
-                                    <th style="padding: 8px; text-align: left;">Risk amount</th>
-                                    <th style="padding: 8px; text-align: left;">Prob %</th>
-                                    <th style="padding: 8px; text-align: left;">Indifference point</th>
-                                    <th style="padding: 8px; text-align: left;">Quality</th>
-                                </tr>
-                            </thead>
-                            <tbody>${tableRows}</tbody>
-                        </table>
-                    </div>
-                    <p style="margin-top: 1.5rem;">
-                        <a href="${ipCsvUrl}" download="indifference_points_${this.subjectId || 'participant'}.csv" 
-                           style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 4px; font-weight: 500;">
-                            Download indifference points (CSV)
-                        </a>
-                    </p>
-                    <p style="margin-top: 2rem; color: #666; font-size: 0.95rem;">
-                        Subject ID: ${this.subjectId} | Trials: ${this.csvData.length}
-                    </p>
-                    <p style="margin-top: 1.5rem;">
-                        <button id="continue-phase2-btn" class="next-button" style="padding: 12px 24px; font-size: 1rem;">
-                            Continue to Phase 2 (72 trials)
-                        </button>
-                    </p>
-                </div>
-            </div>`;
-        const phase2Btn = document.getElementById('continue-phase2-btn');
-        if (phase2Btn) {
-            phase2Btn.addEventListener('click', () => { this.startPhase2(); });
-        }
-    },
-
-    /**
-     * IP Study: start Phase 2 (size manipulation at individual IPs). Builds 72 trials from template + IPs, then runs them.
-     */
-    async startPhase2() {
-        document.body.innerHTML = `
-            <div class="main-container">
-                <div class="instructions">
-                    <h2>Phase 2 – Size at Your Indifference Points</h2>
-                    <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        You will now complete 72 more trials. Each trial will show the same type of choice, but the <strong>visual size</strong> of the options will sometimes change (small vs large).
-                    </p>
-                    <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 2rem;">
-                        The safe amount in each trial is set to your own indifference point from Phase 1, so choices are around 50/50. We are testing whether the size of the options affects your choices.
-                    </p>
-                    <p style="font-size: 0.95rem; color: #666;">6 seconds per choice. The screen will go fullscreen.</p>
-                    <button id="begin-phase2-btn" class="next-button">Begin Phase 2</button>
-                </div>
-            </div>`;
-        document.getElementById('begin-phase2-btn').addEventListener('click', async () => {
-            try {
-                const phase2Trials = await this.generatePhase2Trials(this.indifferencePoints);
-                if (!phase2Trials.length) {
-                    this.showError('Could not build Phase 2 trials. Need 18 indifference points.');
-                    return;
-                }
-                this.phase2Active = true;
-                this.currentTrialIndex = 0;
-                this.currentTimeline = phase2Trials;
-                this.isPractice = false;
-                if (document.fullscreenElement === null) {
-                    document.documentElement.requestFullscreen().then(() => {
-                        this.runNextTrial();
-                    });
-                } else {
-                    this.runNextTrial();
-                }
-            } catch (e) {
-                console.error('Phase 2 start error:', e);
-                this.showError('Could not start Phase 2. ' + (e.message || ''));
-            }
-        });
-    },
-
-    /**
-     * IP Study: show Phase 2 complete (size manipulation at IPs). Trial data (Phase 1 + Phase 2) already saved.
-     */
-    showIPPhase2CompletePage() {
-        document.body.innerHTML = `
-            <div class="main-container">
-                <div class="instructions">
-                    <h2>Phase 2 Complete</h2>
-                    <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        Thank you. You have completed both phases of the Indifference Point study.
-                    </p>
-                    <p style="color: green; font-weight: bold; margin-bottom: 1.5rem;">✓ Your responses have been successfully saved.</p>
-                    <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 1rem;">
-                        Phase 1: 126 calibration trials (18 indifference points).<br>
-                        Phase 2: 84 trials (72 at your indifference points + 12 filler trials).
-                    </p>
-                    <p style="margin-top: 2rem; color: #666; font-size: 0.95rem;">
-                        Subject ID: ${this.subjectId} | Total trials: ${this.csvData.length}
-                    </p>
-                    <p style="margin-top: 1rem;">You may now close this window.</p>
-                </div>
-            </div>`;
-    },
-
     showDataError(message) {
         // Try to get backup data info
         let backupInfo = 'No backup available';
@@ -671,7 +463,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
         console.log('=== BONUS CALCULATION START ===');
         console.log(`Total completed trials: ${this.completedTrials.length}`);
         
-        // Get only main trials (trial_number 1-120) with valid choices
+        // Get only main trials (trial_number 1-20) with valid choices
         const mainTrials = this.completedTrials.filter(t => 
             t.trial_number >= 1 && t.trial_number <= 120 && 
             (t.choice === 'risk' || t.choice === 'safe')
