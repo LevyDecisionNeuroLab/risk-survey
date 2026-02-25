@@ -10,17 +10,23 @@ Object.assign(RiskSurveyExperiment.prototype, {
         try {
             // Load trials from CSV file
             const trialsData = await this.loadTrialsFromCSV();
-            console.log(`Loaded ${trialsData.length} trials from CSV`);
             
+            // --- NEW: Filter out all 50% probability trials ---
+            const filteredTrialsData = trialsData.filter(trial => {
+                return trial.risk_probability !== 50; 
+            });
+            console.log(`Loaded ${trialsData.length} total trials, filtered down to ${filteredTrialsData.length} non-50% trials.`);
+            // --------------------------------------------------
+
             // Simple random selection with no duplicates within the experiment
-            const shuffledTrials = this.shuffle([...trialsData]);
+            const shuffledTrials = this.shuffle([...filteredTrialsData]);
             
             // Select trials for main experiment (ensuring no duplicates)
             const mainTrialCount = Math.min(this.experimentConfig.mainTrials, shuffledTrials.length);
             const selectedMainTrials = shuffledTrials.slice(0, mainTrialCount);
             
             // Create fixed set of 8 practice trials with good variety
-            const fixedPracticeTrials = this.createFixedPracticeTrials(trialsData);
+            const fixedPracticeTrials = this.createFixedPracticeTrials(filteredTrialsData);
             const selectedPracticeTrials = fixedPracticeTrials;
             
             // Create practice trials
@@ -83,8 +89,6 @@ Object.assign(RiskSurveyExperiment.prototype, {
             
         } catch (error) {
             console.error("Error loading trials from CSV:", error);
-            // Fall back to old generation method if CSV loading fails
-            // this.generateTrialsOldMethod();
         }
     },
 
@@ -159,7 +163,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
 
     beginMainTrials() {
         // Request fullscreen
-                if (document.fullscreenElement === null) {
+        if (document.fullscreenElement === null) {
             document.documentElement.requestFullscreen().then(() => {
                 this.currentTrialIndex = 0;
                 this.isPractice = false;
@@ -173,4 +177,4 @@ Object.assign(RiskSurveyExperiment.prototype, {
             this.runNextTrial();
         }
     }
-}); 
+});
