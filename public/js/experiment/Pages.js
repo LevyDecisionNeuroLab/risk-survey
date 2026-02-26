@@ -381,7 +381,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     <div style="margin: 3rem 0; padding: 2rem; border-left: 4px solid #c3e6c3;">
                         <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.4rem;">📊 What's Next</h3>
                        <ul style="margin-bottom: 0; color: var(--text-primary); line-height: 1.6; text-align: left; font-size: 1.1rem;">
-    <li style="margin-bottom: 0.8rem;"><strong>${this.config?.mainTrials || 120} decision trials</strong></li>
+    <li style="margin-bottom: 0.8rem;"><strong>${this.config?.mainTrials || 80} decision trials</strong></li>
     <li style="margin-bottom: 0.8rem;"><strong>6-second timer</strong> for each choice</li>
 </ul>
                     </div>

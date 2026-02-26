@@ -1,7 +1,7 @@
 {
     "experimentConfig": {
         "practiceTrials": 8,
-        "mainTrials": 120,
+        "mainTrials": 80,
         "attentionChecks": 8,
         "trialDuration": 6000,
         "barSizes": {
@@ -82,4 +82,4 @@
             "correct_answer": "Lake"
         }
     ]
-} 
+}
