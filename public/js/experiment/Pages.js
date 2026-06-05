@@ -338,7 +338,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                                 <li style="margin-bottom: 0.5rem;">If you chose the <strong>lottery option</strong>, you'll have a chance to receive a larger bonus — but you may also get <strong>$0</strong>, depending on the probability shown on that trial.</li>
                             </ul>
                             <p style="margin: 1rem 0 0 0; color: var(--text-secondary); line-height: 1.4; font-size: 0.9rem; font-style: italic; font-weight: 300;">
-                                Bonuses will range from $0 to approximately $17, with most bonuses around $3–4.
+                                Bonuses will range from $0 to approximately $17.
                             </p>
                         </div>
                         
