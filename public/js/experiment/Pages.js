@@ -338,7 +338,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                                 <li style="margin-bottom: 0.5rem;">If you chose the <strong>lottery option</strong>, you'll have a chance to receive a larger bonus — but you may also get <strong>$0</strong>, depending on the probability shown on that trial.</li>
                             </ul>
                             <p style="margin: 1rem 0 0 0; color: var(--text-secondary); line-height: 1.4; font-size: 0.9rem; font-style: italic; font-weight: 300;">
-                                Bonuses will range from $0 to approximately $17.
+                                Bonuses will range from $0 to approximately $15.
                             </p>
                         </div>
                         
@@ -381,7 +381,7 @@ Object.assign(RiskSurveyExperiment.prototype, {
                     <div style="margin: 3rem 0; padding: 2rem; border-left: 4px solid #c3e6c3;">
                         <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.4rem;">📊 What's Next</h3>
                        <ul style="margin-bottom: 0; color: var(--text-primary); line-height: 1.6; text-align: left; font-size: 1.1rem;">
-    <li style="margin-bottom: 0.8rem;"><strong>${this.config?.mainTrials || 80} decision trials</strong></li>
+    <li style="margin-bottom: 0.8rem;"><strong>${this.config?.mainTrials || 120} decision trials</strong></li>
     <li style="margin-bottom: 0.8rem;"><strong>6-second timer</strong> for each choice</li>
 </ul>
                     </div>
